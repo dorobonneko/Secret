@@ -1,22 +1,95 @@
-<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.moe.video.framework" >
+<?xml version='1.0' encoding='utf-8'?>
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.moe.video.framework">
+
+    <!--拥有完全的网络访问权限-->
+    <uses-permission android:name="android.permission.INTERNET"/>
+
+    <!--修改或删除您共享存储空间中的内容-->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+
+    <!--读取您共享存储空间中的内容-->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+
+    <!--检索正在运行的应用-->
+    <uses-permission android:name="android.permission.GET_TASKS"/>
+
+    <!--INTERACT_ACROSS_USERS_FULL-->
+    <uses-permission android:name="android.permission.INTERACT_ACROSS_USERS_FULL"/>
+
+    <!--GET_TOP_ACTIVITY_INFO-->
+    <uses-permission android:name="android.permission.GET_TOP_ACTIVITY_INFO"/>
+
+    <!--对正在运行的应用重新排序-->
+    <uses-permission android:name="android.permission.REORDER_TASKS"/>
+
+    <!--此应用可显示在其他应用上方-->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
 
     <application
+        android:usesCleartextTraffic="true"
+        android:name=".app.Application"
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme"
-		android:resizeableActivity = "true">
+        android:resizeableActivity="true">
+
         <activity
             android:name=".MainActivity"
-            android:label="@string/app_name" >
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+            android:label="@string/app_name">
 
-                <category android:name="android.intent.category.LAUNCHER" />
+            <intent-filter>
+
+                <action android:name="android.intent.action.MAIN"/>
+
+                <category android:name="android.intent.category.LAUNCHER"/>
+
             </intent-filter>
+
         </activity>
+		<activity
+			android:excludeFromRecents="false"
+			android:theme="@style/AppTheme.Float"
+			android:taskAffinity=".video"
+			android:process=":video"
+			android:launchMode="singleTask"
+			android:name=".VideoActivity"
+			android:supportsPictureInPicture="true"
+			android:configChanges=
+			"screenSize|smallestScreenSize|screenLayout|orientation"
+			/>
+        <service android:name=".service.AppTaskService"/>
+
+            <activity
+            android:launchMode="singleTask"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize"
+            android:taskAffinity=".ModelUI"
+            android:process=":modelui"
+            android:name=".activity.ui.ModelUI"/>
+
+        <activity
+            android:launchMode="singleTask"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize"
+            android:taskAffinity=".ModelUI2"
+            android:process=":modelui2"
+            android:name=".activity.ui.ModelUI2"/>
+
+        <activity
+            android:launchMode="singleTask"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize"
+            android:taskAffinity=".ModelUI3"
+            android:process=":modelui3"
+            android:name=".activity.ui.ModelUI3"/>
+
+        <activity
+            android:launchMode="singleTask"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize"
+            android:taskAffinity=".ModelUI4"
+            android:process=":modelui4"
+            android:name=".activity.ui.ModelUI4"/>
+
     </application>
 
 </manifest>

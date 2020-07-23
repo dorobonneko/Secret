@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent"
+	android:visibility="visible"
+	android:id="@+id/control">
+
+	<RelativeLayout
+		android:paddingTop="16dp"
+		android:paddingStart="16dp"
+		android:paddingEnd="16dp"
+		android:orientation="horizontal"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:gravity="center_vertical"
+		android:background="@drawable/top2bottom"
+		android:paddingBottom="16dp">
+
+		<ImageButton
+			android:background="?android:attr/selectableItemBackgroundBorderless"
+			android:src="@drawable/close"
+			android:layout_width="32dp"
+			android:layout_height="32dp"
+			android:id="@+id/close"
+			android:layout_centerVertical="true"
+			android:scaleType="centerInside"/>
+
+		<Button
+			android:background="?android:attr/selectableItemBackgroundBorderless"
+			android:layout_width="wrap_content"
+			style="?android:attr/buttonStyleSmall"
+			android:layout_height="32dp"
+			android:text="换源"
+			android:layout_alignParentEnd="true"
+			android:layout_centerVertical="true"
+			android:id="@+id/source"
+			android:textColor="#FFFFFFFF"
+			android:shadowColor="#7D000000"
+			android:shadowRadius="3.0"
+			android:gravity="center"/>
+
+		<ImageButton
+			android:background="?android:attr/selectableItemBackgroundBorderless"
+			android:src="@drawable/pip"
+			android:layout_width="32dp"
+			android:layout_height="32dp"
+			android:layout_toRightOf="@id/close"
+			android:layout_centerVertical="true"
+			android:id="@+id/pip"
+			android:scaleType="centerInside"
+			android:layout_marginStart="8dp"/>
+
+	</RelativeLayout>
+
+	<LinearLayout
+		android:paddingBottom="16dp"
+		android:paddingStart="16dp"
+		android:paddingEnd="16dp"
+		android:orientation="horizontal"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_alignParentBottom="true"
+		android:gravity="center_vertical"
+		android:background="@drawable/bottom2top"
+		android:paddingTop="16dp"
+		android:id="@+id/bottom">
+
+		<ImageButton
+			android:background="?android:attr/selectableItemBackgroundBorderless"
+			android:src="@drawable/play"
+			android:layout_width="32dp"
+			android:layout_height="32dp"
+			android:id="@+id/playorpause"
+			android:scaleType="centerInside"/>
+
+		<SeekBar
+			android:layout_width="wrap_content"
+			android:layout_height="32dp"
+			android:layout_weight="1.0"
+			android:id="@+id/progress"/>
+
+		<TextView
+			android:paddingStart="4dp"
+			android:clipToPadding="false"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:id="@+id/current_time"
+			android:textColor="#fff"
+			android:shadowColor="#7D000000"
+			android:shadowRadius="3.0"
+			android:gravity="center"/>
+
+		<TextView
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="/"
+			android:textColor="#fff"
+			android:shadowColor="#7D000000"
+			android:shadowRadius="3.0"
+			android:gravity="center"/>
+
+		<TextView
+			android:paddingEnd="4dp"
+			android:clipToPadding="false"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:id="@+id/time"
+			android:textColor="#fff"
+			android:shadowColor="#7D000000"
+			android:shadowRadius="3.0"
+			android:gravity="center"/>
+
+		<ImageButton
+			android:background="?android:attr/selectableItemBackgroundBorderless"
+			android:src="@drawable/fullscreen"
+			android:layout_width="32dp"
+			android:layout_height="32dp"
+			android:id="@+id/scale"
+			android:scaleType="centerInside"
+			android:layout_marginStart="8dp"/>
+
+	</LinearLayout>
+
+	<ProgressBar
+		android:layout_width="32dp"
+		android:layout_height="32dp"
+		android:layout_above="@id/bottom"
+		android:layout_marginStart="8dp"
+		android:visibility="invisible"
+		android:id="@+id/loadingprogress"/>
+
+	
+</RelativeLayout>
+
