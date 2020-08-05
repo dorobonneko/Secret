@@ -23,6 +23,9 @@ import org.mozilla.javascript.ScriptRuntime;
 import android.text.Html;
 import android.widget.Button;
 import android.content.res.TypedArray;
+import com.moe.pussy.transformer.CircleTransFormation;
+import com.moe.pussy.widget.PercentImageView;
+import com.moe.pussy.Anim;
 
 public class PostAdapter<T extends PostAdapter.BaseViewholder> extends RecyclerView.Adapter<T>
 {
@@ -37,11 +40,14 @@ public class PostAdapter<T extends PostAdapter.BaseViewholder> extends RecyclerV
 			case 1://标题
 				return (T)new TitleViewholder(LayoutInflater.from(p1.getContext()).inflate(R.layout.post_title_item_view,p1,false));
 			case 2://post
-				return (T)new PostViewholder(LayoutInflater.from(p1.getContext()).inflate(R.layout.post_item_view,p1,false));
+			case 6:
+				return (T)new PostViewholder(LayoutInflater.from(p1.getContext()).inflate(R.layout.post_item_view,p1,false),p2);
 			case 3:
 				return (T)new DetailViewholder(LayoutInflater.from(p1.getContext()).inflate(R.layout.post_detail_item_view,p1,false));
 			case 4:
 				return (T)new PlayViewholder(new Button(p1.getContext()));
+			case 5:
+				return (T)new IconViewHolder(LayoutInflater.from(p1.getContext()).inflate(R.layout.post_icon_item_view,p1,false));
 		}
 		return null;
 	}
@@ -53,21 +59,27 @@ public class PostAdapter<T extends PostAdapter.BaseViewholder> extends RecyclerV
 		p1.title.setText(obj.get("title").toString());
 		if(p1 instanceof DetailViewholder){
 			DetailViewholder dvh=(PostAdapter<T>.DetailViewholder) p1;
-			Pussy.$(dvh.itemView.getContext()).load(ScriptRuntime.toString(obj.get("thumb"))).execute().transformer(new CropTransformer(Gravity.CENTER),new RoundTransformer(dvh.itemView.getResources().getDisplayMetrics(),5)).into(dvh.thumb);
+			Pussy.$(dvh.itemView.getContext()).load(ScriptRuntime.toString(obj.get("thumb"))).execute().anime(Anim.fade(350)).transformer(new CropTransformer(Gravity.CENTER),new RoundTransformer(dvh.itemView.getResources().getDisplayMetrics(),5)).into(dvh.thumb);
 			String info=ScriptRuntime.toString(obj.get("info"));
 			dvh.des.setText(info==null?null:Html.fromHtml(info));
 			String desc=ScriptRuntime.toString(obj.get("desc"));
 			dvh.description.setText(desc==null?null:Html.fromHtml(desc));
-			Pussy.$(dvh.itemView.getContext()).load(ScriptRuntime.toString(obj.get("thumb"))).execute().transformer(new CropTransformer(Gravity.CENTER),new com.moe.pussy.transformer.BlurTransformer(55),new RoundTransformer(dvh.itemView.getResources().getDisplayMetrics(),5)).into((View)dvh.thumb.getParent());
+			Pussy.$(dvh.itemView.getContext()).load(ScriptRuntime.toString(obj.get("thumb"))).execute().anime(Anim.fade(500)).transformer(new CropTransformer(Gravity.CENTER),new com.moe.pussy.transformer.BlurTransformer(55),new RoundTransformer(dvh.itemView.getResources().getDisplayMetrics(),5)).into((View)dvh.thumb.getParent());
 			
 		}else
 		if(p1 instanceof PostViewholder){
 			PostViewholder pvh=(PostAdapter.PostViewholder) p1;
-			pvh.des.setText(ScriptRuntime.toString(obj.get("des")));
-			Pussy.$(pvh.itemView.getContext()).load(ScriptRuntime.toString(obj.get("thumb"))).execute().transformer(new CropTransformer(Gravity.CENTER),new RoundTransformer(pvh.itemView.getResources().getDisplayMetrics(),5)).into(pvh.thumb);
+			Object des=obj.get("des");
+			if(des==null)
+				des="";
+			pvh.des.setText(des.toString());
+			Pussy.$(pvh.itemView.getContext()).load(ScriptRuntime.toString(obj.get("thumb"))).execute().delay(150).anime(Anim.fade(150)).transformer(new CropTransformer(Gravity.CENTER),new RoundTransformer(pvh.itemView.getResources().getDisplayMetrics(),5)).into(pvh.thumb);
 		}else if(p1 instanceof TitleViewholder){
 			TitleViewholder tvh=(PostAdapter.TitleViewholder) p1;
 			tvh.summary.setVisibility(obj.get("click")==null?View.INVISIBLE:View.VISIBLE);
+		}else if(p1 instanceof IconViewHolder){
+			IconViewHolder ivh=(PostAdapter<T>.IconViewHolder) p1;
+			Pussy.$(ivh.itemView.getContext()).load(ScriptRuntime.toString(obj.get("thumb"))).execute().transformer(new CircleTransFormation(0)).into(ivh.icon);
 		}
 	}
 
@@ -86,6 +98,10 @@ public class PostAdapter<T extends PostAdapter.BaseViewholder> extends RecyclerV
 					return 3;
 				case "play":
 					return 4;
+				case "icon":
+					return 5;
+				case "thumb":
+					return 6;
 			}
 		}
 		catch (Exception e)
@@ -116,7 +132,7 @@ public class PostAdapter<T extends PostAdapter.BaseViewholder> extends RecyclerV
 			if(fun!=null)
 			{
 				Context context=Context.enter();
-				fun.call(context,fun,fun,new Object[0]);
+				fun.call(context,fun,fun,new Object[]{obj});
 				context.exit();
 			}
 		}
@@ -131,20 +147,30 @@ public class PostAdapter<T extends PostAdapter.BaseViewholder> extends RecyclerV
 			summary.setOnClickListener(this);
 		}
 	}
+	public class IconViewHolder extends BaseViewholder{
+		ImageView icon;
+		IconViewHolder(View v){
+			super(v);
+			icon=v.findViewById(R.id.icon);
+			v.setOnClickListener(this);
+		}
+	}
 	public class PostViewholder extends BaseViewholder{
 		ImageView thumb;
 		TextView des;
-		PostViewholder(View v){
+		PostViewholder(View v,int type){
 			super(v);
 			thumb=v.findViewById(R.id.icon);
 			des=v.findViewById(R.id.summary);
 			v.setOnClickListener(this);
+			if(type==6)
+				((PercentImageView)thumb).setPercent(0.618f);
 		}
 	}
 	public class DetailViewholder extends PostViewholder{
 		TextView description;
 		DetailViewholder(View v){
-			super(v);
+			super(v,3);
 			description=v.findViewById(R.id.desc);
 		}
 	}

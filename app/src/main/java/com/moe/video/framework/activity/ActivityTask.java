@@ -22,6 +22,9 @@ public class ActivityTask
 	public static void startTask(Context context,String packageName){
 		context.startService(new Intent(context,AppTaskService.class).setAction(START).putExtra(Intent.EXTRA_PACKAGE_NAME,packageName));
 	}
+	public static void stopTask(Context context,String packageName){
+		context.startService(new Intent(context,AppTaskService.class).setAction(STOP).putExtra(Intent.EXTRA_PACKAGE_NAME,packageName));
+	}
 	public static class TaskDesc implements Serializable{
 		public int taskId;
 		public int index;

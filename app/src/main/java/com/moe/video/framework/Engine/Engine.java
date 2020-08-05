@@ -22,12 +22,16 @@ public class Engine
 		engine.put("runtime",runtime);
 		try
 		{
+			//engine.eval(new InputStreamReader(fragment.getContext().getAssets().open("MyPromise.js")));
 			engine.eval(new InputStreamReader(fragment.getContext().getAssets().open("function.js")));
 		}
 		catch (ScriptException e)
 		{}
 		catch (IOException e)
 		{}
+	}
+	public Runtime getRuntime(){
+		return (Runtime)engine.get("runtime");
 	}
 	public Object eval(String script) throws ScriptException{
 		return engine.eval(script);

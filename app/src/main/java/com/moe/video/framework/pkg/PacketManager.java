@@ -88,7 +88,7 @@ public class PacketManager
 	public List<Packet> getAllPacket(){
 		return new ArrayList<Packet>(list.values());
 	}
-	public void installPacket(String path) throws IOException{
+	public void installPacket(String path) throws Exception{
 		//安装，安装完通知监听者
 		boolean update=false;
 		Packet p=new Packet(path,true);

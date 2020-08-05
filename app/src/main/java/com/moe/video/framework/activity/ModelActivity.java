@@ -23,6 +23,7 @@ import android.provider.Settings;
 import android.net.Uri;
 import android.content.res.Configuration;
 import com.moe.video.framework.VideoActivity;
+import android.content.Context;
 
 public abstract class ModelActivity extends Activity
 {
@@ -33,6 +34,15 @@ public abstract class ModelActivity extends Activity
 	{
 		
 		super.onCreate(savedInstanceState);
+		registerReceiver(new BroadcastReceiver(){
+
+				@Override
+				public void onReceive(Context p1, Intent p2)
+				{
+					if(getTaskId()==p2.getIntExtra("id",-1))
+						finishAndRemoveTask();
+				}
+			}, new IntentFilter(getPackageName()));
 		getWindow().getDecorView().setSystemUiVisibility(getWindow().getDecorView().getSystemUiVisibility()|View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
 		mPacket=PacketManager.getInstance().getPacket(getIntent().getAction());
 		Bitmap logo=BitmapUtil.DrawableToBitmap(PacketManager.getInstance().loadLogo(mPacket));

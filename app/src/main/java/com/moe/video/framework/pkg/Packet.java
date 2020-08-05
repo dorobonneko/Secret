@@ -50,7 +50,7 @@ public class Packet
 		if(readHead)
 			file.close();
 	}
-	public InputStream getExe(String path){
+	public InputStream getFile(String path){
 		InputStream input=null;
 		try
 		{

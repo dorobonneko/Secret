@@ -23,10 +23,10 @@ public class AppAdapter extends BaseAdapter implements PacketManager.OnPacketCha
 	public AppAdapter(PacketManager pm){
 		this.pm=pm;
 		this.list=pm.getAllPacket();
+		mCollator=Collator.getInstance(Locale.CHINA);
 		Collections.sort(list,this);
 		pm.registerOnPacketChangedListener(this);
-		mCollator=Collator.getInstance(Locale.CHINA);
-	}
+		}
 
 	@Override
 	public void onPacketRemoved(Packet packet)

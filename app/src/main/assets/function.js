@@ -6,6 +6,8 @@ for(var fn in runtime) {
          return method.apply(runtime,arguments);
       };
     })();
+  }else{
+	  this[fn]=runtime[fn];
   }
 }
 function array(list){
@@ -47,9 +49,11 @@ function request(opt) {
 	   bytearray.flush();
 	   return{
 		   code:conn.getResponseCode(),
+		   headers:()=>{return conn.getHeaderFields();},
+		   header:(key)=>{return conn.getHeaderField(key);},
 		   string:()=>{return bytearray.toString();},
 		   bytes:()=>{return bytearray.toBytes();},
-		   json:()=>{return JSON.parse(bytearray.toString());},
+		   json:()=>{return JSON.parse(bytearray.toString()+"");},
 		   close:()=>{bytearray.close();conn.disconnect();}
 	   }
 }
@@ -69,5 +73,23 @@ var module=new Object();
 function $open(type,args){
 	//toast(typeof args.url);
 	open(type,JSON.stringify(args));
+}
+function setTimeout(fun,duration){
+	var time=duration||0;
+	var run={run:function(){java.lang.Thread.currentThread().sleep(time); fun();}};
+	new java.lang.Thread(new java.lang.Runnable(run)).start();
+}
+eval(load("file:///android_asset/Promise.js")+"");
+function prompt(msg,defaultValue){
+	return new Promise(function(resolve,reject){
+		_prompt(msg,defaultValue,(result)=>{
+			resolve(result);
+		})});
+}
+function confirm(title,msg){
+	return new Promise(function(resolve,reject){
+		_confirm(title,msg,(result)=>{
+			resolve(result);
+		})});
 }
 //(()=>{toast("aaa")})();

@@ -24,8 +24,12 @@ import android.content.Intent;
 import com.moe.video.framework.activity.ModelActivity;
 import com.moe.video.framework.activity.ActivityTask;
 import com.moe.video.framework.Engine.Engine;
+import android.widget.AdapterView.OnItemLongClickListener;
+import android.content.DialogInterface;
+import android.net.Uri;
+import java.net.HttpURLConnection;
 
-public class MainActivity extends Activity implements FolderDialog.Callback,GridView.OnItemClickListener
+public class MainActivity extends Activity implements FolderDialog.Callback,GridView.OnItemClickListener,GridView.OnItemLongClickListener,PacketManager.OnPacketChangedListener
 {
 	private GridView mGridView;
 	private AppAdapter mAppAdapter;
@@ -36,9 +40,11 @@ public class MainActivity extends Activity implements FolderDialog.Callback,Grid
         setContentView(R.layout.main);
 		setActionBar((Toolbar)findViewById(R.id.toolbar));
 		mGridView=findViewById(R.id.gridview);
+		PacketManager.getInstance().registerOnPacketChangedListener(this);
 		mGridView.setAdapter(mAppAdapter=new AppAdapter(PacketManager.getInstance()));
 		mGridView.setNumColumns(4);
 		mGridView.setOnItemClickListener(this);
+		mGridView.setOnItemLongClickListener(this);
 		getWindow().getDecorView().setSystemUiVisibility(getWindow().getDecorView().getSystemUiVisibility()|View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
 		if(checkCallingOrSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)==PackageManager.PERMISSION_DENIED)
 			requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},4676);
@@ -79,7 +85,7 @@ public class MainActivity extends Activity implements FolderDialog.Callback,Grid
 		{
 			PacketManager.getInstance().installPacket(file.getAbsolutePath());
 		}
-		catch (IOException e)
+		catch (Exception e)
 		{Toast.makeText(getApplicationContext(),"文件错误",Toast.LENGTH_SHORT).show();}
 		
 	}
@@ -89,7 +95,43 @@ public class MainActivity extends Activity implements FolderDialog.Callback,Grid
 	{
 		Packet p=(Packet)p1.getAdapter().getItem(p3);
 		ActivityTask.startTask(this,p.packageName);
-		}
+	}
+
+	@Override
+	public boolean onItemLongClick(AdapterView<?> p1, View p2, int p3, long p4)
+	{
+		final Packet p=(Packet)p1.getAdapter().getItem(p3);
+		new AlertDialog.Builder(this).setTitle("删除？").setMessage(p.title).setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener(){
+
+				@Override
+				public void onClick(DialogInterface p1, int p2)
+				{
+					PacketManager.getInstance().uninstallPacket(p.packageName);
+				}
+			}).setNegativeButton(android.R.string.cancel,null).show();
+		return true;
+	}
+
+	@Override
+	public void onPacketUpdate(Packet old, Packet new_)
+	{
+		ActivityTask.stopTask(this,old.packageName);
+	}
+
+	@Override
+	public void onPacketRemoved(Packet packet)
+	{
+		ActivityTask.stopTask(this,packet.packageName);
+	}
+
+	@Override
+	public void onPacketAdded(Packet packet)
+	{
+	}
+
+
+
+
 
 
 	

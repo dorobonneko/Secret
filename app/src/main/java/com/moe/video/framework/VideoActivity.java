@@ -56,9 +56,10 @@ public class VideoActivity extends Activity implements TextureView.SurfaceTextur
 	private boolean canClose;
 	private TextureView mTextureView;
 	private float sx,sy;
-	private int scrollState;
+	private int scrollState,preSeek;
 	private TextView tips;
 	private AudioManager audio;
+	private int scaleType;
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
@@ -83,6 +84,7 @@ public class VideoActivity extends Activity implements TextureView.SurfaceTextur
 		control.findViewById(R.id.playorpause).setOnClickListener(this);
 		control.findViewById(R.id.pip).setOnClickListener(this);
 		control.findViewById(R.id.close).setOnClickListener(this);
+		control.findViewById(R.id.scale).setOnClickListener(this);
 		progressView = control.findViewById(R.id.loadingprogress);
 		SeekBar seekbar=control.findViewById(R.id.progress);
 		tips = findViewById(R.id.tips);
@@ -100,6 +102,7 @@ public class VideoActivity extends Activity implements TextureView.SurfaceTextur
 		try
 		{
 			data = new JSONObject(intent.getStringExtra("data"));
+			preSeek=0;
 			changeSource(0);
 		}
 		catch (JSONException e)
@@ -140,22 +143,24 @@ public class VideoActivity extends Activity implements TextureView.SurfaceTextur
 	public void onPrepared(MediaPlayer p1)
 	{
 		progressView.setVisibility(View.INVISIBLE);
+		p1.seekTo(preSeek);
 		p1.start();
 	}
 
 	@Override
 	public boolean onError(MediaPlayer p1, int p2, int p3)
 	{
-		Toast.makeText(this,"Error:"+p2,Toast.LENGTH_SHORT).show();
 		switch(p2){
 			case 0:
 			case p1.MEDIA_ERROR_UNKNOWN:
 			case p1.MEDIA_ERROR_IO:
 			case p1.MEDIA_ERROR_TIMED_OUT:
 			case p1.MEDIA_ERROR_UNSUPPORTED:
+				Toast.makeText(this,"Error:"+p2,Toast.LENGTH_SHORT).show();
 				showSource();
 				break;
 			case -38:
+			case -1:
 				break;
 		}
 		return true;
@@ -305,6 +310,10 @@ public class VideoActivity extends Activity implements TextureView.SurfaceTextur
 	private void showSource(){
 		try
 		{
+			if(mMediaPlayer.getDuration()>0)
+				preSeek=mMediaPlayer.getCurrentPosition();
+				else
+				preSeek=0;
 			JSONArray sources=data.getJSONArray("source");
 			String[] items=new String[sources.length()];
 			for (int i=0;i < sources.length();i++)
@@ -342,11 +351,29 @@ public class VideoActivity extends Activity implements TextureView.SurfaceTextur
 			case R.id.close:
 				finishAndRemoveTask();
 				break;
+			case R.id.scale:
+				scaleType++;
+				if(scaleType==3)
+					scaleType=0;
+					scale();
+				break;
 		}
 	}
 
 
-
+private void scale(){
+	switch(scaleType){
+		case 0:
+			centerInside();
+			break;
+		case 1:
+			centerCrop();
+			break;
+		case 2:
+			center();
+			break;
+	}
+}
 
 	@Override
 	public boolean handleMessage(Message p1)
@@ -411,7 +438,7 @@ public class VideoActivity extends Activity implements TextureView.SurfaceTextur
 	public void onVideoSizeChanged(MediaPlayer p1, int p2, int p3)
 	{
 		if (!isInPictureInPictureMode())
-			centerInside();
+			scale();
 			//centerCrop();
 			//center();
 	}
@@ -552,7 +579,7 @@ public class VideoActivity extends Activity implements TextureView.SurfaceTextur
 	public void onSurfaceTextureSizeChanged(SurfaceTexture p1, int p2, int p3)
 	{
 		if (mMediaPlayer.getVideoWidth() > 0)
-			centerInside();
+			scale();
 			//centerCrop();
 			//center();
 	}

@@ -35,8 +35,19 @@ import java.util.List;
 import java.util.ArrayList;
 import org.mozilla.javascript.Function;
 import com.moe.video.framework.util.Space;
+import org.mozilla.javascript.EcmaError;
+import android.graphics.drawable.Drawable;
+import android.view.WindowInsets;
+import java.io.InputStream;
+import android.util.TypedValue;
+import android.util.Xml;
+import org.xmlpull.v1.XmlPullParser;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import com.caverock.androidsvg.SVG;
+import android.graphics.drawable.PictureDrawable;
 
-public class AppBrandFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener
+public class AppBrandFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener,View.OnApplyWindowInsetsListener
 {
 	private Packet mPacket;
 	private Engine mEngine;
@@ -45,6 +56,17 @@ public class AppBrandFragment extends Fragment implements SwipeRefreshLayout.OnR
 	private int page=1;
 	private boolean canLoadMore=true;
 	private List data;
+
+	public String getPackageName()
+	{
+		return mPacket.packageName;
+	}
+	public Menu getMenu(){
+		Toolbar toolbar=getView().findViewById(R.id.toolbar);
+		if(toolbar!=null)
+		return toolbar.getMenu();
+		return null;
+	}
 	@Override
 	public void onAttach(Activity activity)
 	{
@@ -56,14 +78,88 @@ public class AppBrandFragment extends Fragment implements SwipeRefreshLayout.OnR
 		String exe=mBundle.getString("exe");
 		try
 		{
-			mEngine.eval(new InputStreamReader(mPacket.getExe(exe)));
+			mEngine.eval(new InputStreamReader(mPacket.getFile(exe)));
 			}
 		catch (Exception e)
 		{
 			Toast.makeText(getContext(),e.getMessage(),Toast.LENGTH_SHORT).show();
 		}
 	}
+	public void refresh(){
+		refresh.setRefreshing(true);
+		onRefresh();
+	}
+	public void next(){
+		if(canLoadMore){
+			loadMore();
+			}
+	}
+	public void close(){
+		getActivity().onBackPressed();
+	}
 
+	@Override
+	public WindowInsets onApplyWindowInsets(View p1, WindowInsets p2)
+	{
+		p1.setPadding(p2.getSystemWindowInsetLeft(),p2.getSystemWindowInsetTop(),p2.getSystemWindowInsetRight(),p2.getSystemWindowInsetBottom());
+		return p2;
+	}
+
+	
+	public void reload(){
+		try
+		{
+			NativeObject toolbar_json=(NativeObject) mEngine.eval("module.exports.toolbar("+getArguments().getString("args","undefined")+")");
+			if(toolbar_json==null)return;
+			Toolbar toolbar=getView().findViewById(R.id.toolbar);
+			toolbar.getMenu().clear();
+			Object tit=toolbar_json.get("title");
+			toolbar.setTitle(tit==null?null:ScriptRuntime.toString(tit));
+			NativeArray menu=(NativeArray) toolbar_json.get("menu");
+			if(menu!=null)
+				for (int i=0;i < menu.size();i++) {
+					final NativeObject menuitem=(NativeObject) menu.get(i);
+					Menu m=toolbar.getMenu();
+					final Object id=menuitem.get("id");
+					Object title=menuitem.get("title");
+					MenuItem item=m.add(0,id==null?0:id.toString().hashCode(),0,title==null?null:title.toString());
+					item.setTitleCondensed(title==null?"":title.toString());
+						Object icon=menuitem.get("icon");
+					if(icon!=null)
+					{
+						InputStream input=mPacket.getFile(icon.toString());
+						Drawable d=new PictureDrawable(SVG.getFromInputStream(input).renderToPicture());
+						input.close();
+						item.setIcon(d);
+					}
+					Object showAsAction=menuitem.get("showAsAction");
+					if(showAsAction!=null){
+						if(ScriptRuntime.toBoolean(showAsAction))
+							item.setShowAsActionFlags(item.SHOW_AS_ACTION_ALWAYS);
+					}
+					item.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener(){
+
+							@Override
+							public boolean onMenuItemClick(MenuItem p1)
+							{
+								try{
+									Function fun=(Function) menuitem.get("click");
+								Context c=Context.enter();
+								fun.call(c,menuitem,menuitem,new Object[]{mEngine.getRuntime().window.getMenu().find(id==null?null:id.toString())});
+								c.exit();
+								}catch(Exception e){}
+								return true;
+							}
+						});
+				}
+		}catch(ScriptException s){}
+		
+		catch (Exception e)
+		{
+			mEngine.getRuntime().toast(e.getMessage());
+		}
+		refresh();
+	}
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
 	{
@@ -75,6 +171,8 @@ public class AppBrandFragment extends Fragment implements SwipeRefreshLayout.OnR
 	public void onViewCreated(View view, Bundle savedInstanceState)
 	{
 		super.onViewCreated(view, savedInstanceState);
+		view.setOnApplyWindowInsetsListener(this);
+		view.requestApplyInsets();
 		refresh=view.findViewById(R.id.refresh);
 		refresh.setOnRefreshListener(this);
 		RecyclerView mRecyclerView=view.findViewById(R.id.recyclerview);
@@ -88,8 +186,10 @@ public class AppBrandFragment extends Fragment implements SwipeRefreshLayout.OnR
 						switch(((NativeObject)data.get(p1)).get("type").toString()){
 							case "title":
 							case "detail":
+							case "thumb":
 								return 6;
 							case "post":
+							case "icon":
 								return 2;
 							case "play":
 								return 3;
@@ -99,34 +199,7 @@ public class AppBrandFragment extends Fragment implements SwipeRefreshLayout.OnR
 				});
 		mRecyclerView.setAdapter(pa=new PostAdapter(data=new ArrayList()));
 		mRecyclerView.addOnScrollListener(new Scroll());
-		try
-		{
-			NativeObject toolbar_json=(NativeObject) mEngine.eval("module.exports.toolbar()");
-			Toolbar toolbar=view.findViewById(R.id.toolbar);
-			toolbar.setTitle(toolbar_json.get("title").toString());
-			NativeArray menu=(NativeArray) toolbar_json.get("menu");
-			for (int i=0;i < menu.size();i++) {
-				final NativeObject menuitem=(NativeObject) menu.get(i);
-				Menu m=toolbar.getMenu();
-				MenuItem item=m.add(menuitem.get("title").toString());
-				item.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener(){
-
-						@Override
-						public boolean onMenuItemClick(MenuItem p1)
-						{
-							Function fun=(Function) menuitem.get("onclick");
-							Context c=Context.enter();
-							fun.call(c,menuitem,menuitem,new Object[0]);
-							c.exit();
-							return true;
-						}
-					});
-			}
-		}
-		catch (ScriptException e)
-		{}
-		catch (Exception e)
-		{}
+		reload();
 
 	}
 
@@ -135,8 +208,7 @@ public class AppBrandFragment extends Fragment implements SwipeRefreshLayout.OnR
 	{
 		// TODO: Implement this method
 		super.onActivityCreated(savedInstanceState);
-		refresh.setRefreshing(true);
-		onRefresh();
+		
 		
 	}
 
@@ -158,7 +230,7 @@ public class AppBrandFragment extends Fragment implements SwipeRefreshLayout.OnR
 			public void run(){
 				try
 				{
-					final NativeObject data=(NativeObject) mEngine.eval("module.exports.fetch("+getArguments().getString("args","null")+","+page+");");
+					final NativeObject data=(NativeObject) mEngine.eval("module.exports.fetch("+getArguments().getString("args","undefined")+","+page+");");
 					final NativeArray items=(NativeArray) data.get("items");
 					getActivity().runOnUiThread(new Runnable(){
 
@@ -170,19 +242,23 @@ public class AppBrandFragment extends Fragment implements SwipeRefreshLayout.OnR
 								if(page==1){
 									AppBrandFragment.this.data.clear();
 									pa.notifyDataSetChanged();
+									if(items!=null){
 									AppBrandFragment.this.data.addAll(items);
 									pa.notifyItemRangeInserted(0,items.size());
+									}
 								}else{
 									int count=pa.getItemCount();
+									if(items!=null){
 									AppBrandFragment.this.data.addAll(items);
 									pa.notifyItemRangeInserted(count,items.size());
+									}
 									
 								}
 								page=ScriptRuntime.toInt32(data.get("nextPage"));
 							}
 						});
-				}
-				catch (final ScriptException e)
+				}catch(ScriptException e){}
+				catch (final Exception e)
 				{
 					getActivity().runOnUiThread(new Runnable(){
 

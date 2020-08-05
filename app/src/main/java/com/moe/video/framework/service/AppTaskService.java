@@ -59,6 +59,15 @@ public class AppTaskService extends Service
 					}
 				
 				}break;
+			case ActivityTask.STOP:
+				String packageName=intent.getStringExtra(intent.EXTRA_PACKAGE_NAME);
+				for(ActivityTask.TaskDesc td:tasks){
+					if(td!=null&&packageName.equals(td.packageName)){
+					sendBroadcast(new Intent(getPackageName()).putExtra("id",td.taskId));
+					ActivityTask.deleteTask(this,td.index);
+					}
+				}
+				break;
 		}
 		return super.onStartCommand(intent, flags, startId);
 	}
