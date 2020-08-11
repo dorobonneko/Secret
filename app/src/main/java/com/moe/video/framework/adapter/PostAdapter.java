@@ -117,7 +117,7 @@ public class PostAdapter<T extends PostAdapter.BaseViewholder> extends RecyclerV
 		return data.size();
 	}
 	
-	public abstract class BaseViewholder extends RecyclerView.ViewHolder implements View.OnClickListener{
+	public abstract class BaseViewholder extends RecyclerView.ViewHolder implements View.OnClickListener,View.OnLongClickListener{
 		 TextView title;
 		BaseViewholder(View v){
 			 super(v);
@@ -136,6 +136,21 @@ public class PostAdapter<T extends PostAdapter.BaseViewholder> extends RecyclerV
 				context.exit();
 			}
 		}
+
+		@Override
+		public boolean onLongClick(View p1)
+		{
+			NativeObject obj=(NativeObject) data.get(getAdapterPosition());
+			Function fun=(Function) obj.get("longClick");
+			if(fun!=null)
+			{
+				Context context=Context.enter();
+				fun.call(context,fun,fun,new Object[]{obj});
+				context.exit();
+			}
+			return true;
+		}
+
 
 			  
 	}
@@ -163,6 +178,7 @@ public class PostAdapter<T extends PostAdapter.BaseViewholder> extends RecyclerV
 			thumb=v.findViewById(R.id.icon);
 			des=v.findViewById(R.id.summary);
 			v.setOnClickListener(this);
+			v.setOnLongClickListener(this);
 			if(type==6)
 				((PercentImageView)thumb).setPercent(0.618f);
 		}

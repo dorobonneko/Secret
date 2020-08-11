@@ -60,6 +60,7 @@ public class VideoActivity extends Activity implements TextureView.SurfaceTextur
 	private TextView tips;
 	private AudioManager audio;
 	private int scaleType;
+	private String dataSource;
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
@@ -122,6 +123,7 @@ public class VideoActivity extends Activity implements TextureView.SurfaceTextur
 					JSONObject item=source.getJSONObject(index);
 					try
 					{
+						dataSource=item.getString("src");
 						mMediaPlayer.setDataSource(item.getString("src"));
 						mMediaPlayer.prepareAsync();
 						progressView.setVisibility(View.VISIBLE);
@@ -151,8 +153,20 @@ public class VideoActivity extends Activity implements TextureView.SurfaceTextur
 	public boolean onError(MediaPlayer p1, int p2, int p3)
 	{
 		switch(p2){
-			case 0:
 			case p1.MEDIA_ERROR_UNKNOWN:
+				preSeek=mMediaPlayer.getCurrentPosition();
+				mMediaPlayer.stop();
+				mMediaPlayer.reset();
+				try
+				{
+					mMediaPlayer.setDataSource(dataSource);
+					mMediaPlayer.prepareAsync();
+				}
+				catch (Exception e)
+				{}
+				break;
+			case 0:
+			
 			case p1.MEDIA_ERROR_IO:
 			case p1.MEDIA_ERROR_TIMED_OUT:
 			case p1.MEDIA_ERROR_UNSUPPORTED:

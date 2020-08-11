@@ -15,6 +15,7 @@ public class Packet
 	String logo;
 	public int version;
 	private ZipFile file;
+	long lastModify;
 	Packet(String  path,boolean readHead) throws IOException{
 		this.source=path;
 		file=new ZipFile(path);

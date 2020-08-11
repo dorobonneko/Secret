@@ -23,6 +23,7 @@ import java.io.InputStreamReader;
 import java.io.FileNotFoundException;
 import com.moe.video.framework.util.StringUtil;
 import java.io.FileInputStream;
+import com.moe.pussy.Pussy;
 
 public class Runtime 
 {
@@ -66,6 +67,8 @@ public class Runtime
 				return Parser.htmlParser();
 			case "database":
 				return new Database(fragment.getContext(),window.getPackageName());
+			case "pussy":
+				return new PussyProxy(Pussy.$(fragment.getActivity()));
 		}
 		return null;
 	}
@@ -176,4 +179,16 @@ public class Runtime
 	/*public void prompt(String message,Object result){
 		prompt(message,null,result);
 	}*/
+	public class PussyProxy{
+		private Pussy pussy;
+		PussyProxy(Pussy pussy){
+			this.pussy=pussy;
+		}
+		public int getActiveResourceSize(){
+			return pussy.getActiveResource().size();
+		}
+		public String getActiveResource(){
+			return pussy.getActiveResource().toString();
+		}
+	}
 }

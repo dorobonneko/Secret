@@ -31,6 +31,9 @@ public class Database
 			mShared=context.getSharedPreferences(packageName,0);
 			return mShared.getString(key,defaultValue);
 	}
+	public void delete(String key){
+		mShared.edit().remove(key).commit();
+	}
 	public DatabaseEditer getEditor(String table){
 		return new DatabaseEditer(sql,table);
 	}
@@ -63,7 +66,7 @@ public class Database
 		}
 		public List<Map<String,String>> query(String where)
 		{
-			Cursor cursor=sql.rawQuery(String.format("select * from %s where %s",new String[]{table,where}),null);
+			Cursor cursor=sql.rawQuery(where==null?String.format("select * from %s",table):String.format("select * from %s where %s",new String[]{table,where}),null);
 			List<Map<String,String>> list=new ArrayList<>();
 			while(cursor.moveToNext()){
 				Map<String,String> map=new HashMap<>();

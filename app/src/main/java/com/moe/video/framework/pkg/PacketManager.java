@@ -54,6 +54,7 @@ public class PacketManager
 			try
 			{
 				Packet p=new Packet(f.getAbsolutePath(),false);
+				p.lastModify=f.lastModified();
 				getInstance().list.put(p.packageName,p);
 			}
 			catch (IOException e)
@@ -73,6 +74,12 @@ public class PacketManager
 	}
 	public Packet getPacket(String packageName){
 		Packet p= list.get(packageName);
+		if(p!=null){
+			if(p.lastModify!=new File(workPath,packageName).lastModified()){
+				p.close();
+				p=null;
+				}
+		}
 		if(p==null)
 		{
 			try
@@ -98,7 +105,7 @@ public class PacketManager
 		Files.copy(Paths.get(URI.create(Uri.fromFile(new File(path)).toString())),new FileOutputStream(file));
 		Packet old=list.get(p.packageName);
 		list.put(p.packageName,new Packet(file.getAbsolutePath(),false));
-		
+		p.lastModify=file.lastModified();
 		for(OnPacketChangedListener l:listener)
 		if(update)
 			l.onPacketUpdate(old,list.get(p.packageName));
