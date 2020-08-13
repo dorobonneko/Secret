@@ -24,6 +24,13 @@ import android.net.Uri;
 import android.content.res.Configuration;
 import com.moe.video.framework.VideoActivity;
 import android.content.Context;
+import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.FrameLayout;
+import android.view.Gravity;
+import com.moe.video.framework.R;
+import android.app.AlertDialog;
+import com.moe.pussy.Pussy;
 
 public abstract class ModelActivity extends Activity
 {
@@ -59,6 +66,18 @@ public abstract class ModelActivity extends Activity
 		mBundle.putString("exe",mPacket.exe);
 		abf.setArguments(mBundle);
 		getFragmentManager().beginTransaction().add(android.R.id.content,abf).addToBackStack(null).commit();
+		ViewGroup vg=(ViewGroup) getWindow().getDecorView();
+		ImageView debug=null;
+		vg.addView(debug=new ImageView(this),new FrameLayout.LayoutParams(-2,-2,Gravity.BOTTOM|Gravity.END));
+		debug.setImageResource(R.drawable.close);
+			debug.setOnClickListener(new View.OnClickListener(){
+
+					@Override
+					public void onClick(View p1)
+					{
+						new AlertDialog.Builder(p1.getContext()).setMessage(Pussy.$(p1.getContext()).getActiveResource().size()+"\n"+Pussy.$(p1.getContext()).getActiveResource().toString()).show();
+					}
+				});
 		}
 	}
 public void play(final String json){
