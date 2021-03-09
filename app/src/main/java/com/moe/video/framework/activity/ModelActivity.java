@@ -31,6 +31,7 @@ import android.view.Gravity;
 import com.moe.video.framework.R;
 import android.app.AlertDialog;
 import com.moe.pussy.Pussy;
+import com.moe.neko.Neko;
 
 public abstract class ModelActivity extends Activity
 {
@@ -75,7 +76,8 @@ public abstract class ModelActivity extends Activity
 					@Override
 					public void onClick(View p1)
 					{
-						new AlertDialog.Builder(p1.getContext()).setMessage(Pussy.$(p1.getContext()).getActiveResource().size()+"\n"+Pussy.$(p1.getContext()).getActiveResource().toString()).show();
+                        new AlertDialog.Builder(p1.getContext()).setMessage(Neko.with(p1).printCacheStatus()).show();
+						//new AlertDialog.Builder(p1.getContext()).setMessage(Pussy.$(p1.getContext()).getActiveResource().size()+"\n"+Pussy.$(p1.getContext()).getActiveResource().toString()).show();
 					}
 				});
 		}

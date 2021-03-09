@@ -18,6 +18,12 @@ public class FolderAdapter implements ListAdapter
 	public FolderAdapter(List<File> list){
 		this.list=list;
 	}
+
+    @Override
+    public CharSequence[] getAutofillOptions() {
+        return null;
+    }
+
 	
 	public void notifyDataSetChanged(){
 		for(DataSetObserver dataset:mDataset)

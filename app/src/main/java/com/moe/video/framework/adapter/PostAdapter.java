@@ -26,6 +26,12 @@ import android.content.res.TypedArray;
 import com.moe.pussy.transformer.CircleTransFormation;
 import com.moe.pussy.widget.PercentImageView;
 import com.moe.pussy.Anim;
+import com.moe.neko.Neko;
+import android.widget.ImageView.ScaleType;
+import com.moe.neko.transform.RoundTransform;
+import com.moe.neko.transform.BlurTransform;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.ColorDrawable;
 
 public class PostAdapter<T extends PostAdapter.BaseViewholder> extends RecyclerView.Adapter<T>
 {
@@ -59,12 +65,14 @@ public class PostAdapter<T extends PostAdapter.BaseViewholder> extends RecyclerV
 		p1.title.setText(obj.get("title").toString());
 		if(p1 instanceof DetailViewholder){
 			DetailViewholder dvh=(PostAdapter<T>.DetailViewholder) p1;
-			Pussy.$(dvh.itemView.getContext()).load(ScriptRuntime.toString(obj.get("thumb"))).execute().anime(Anim.fade(350)).transformer(new CropTransformer(Gravity.CENTER),new RoundTransformer(dvh.itemView.getResources().getDisplayMetrics(),5)).into(dvh.thumb);
+			Neko.with(dvh.thumb).load(ScriptRuntime.toString(obj.get(("thumb")))).asBitmap().scaleType(ScaleType.CENTER_CROP).transform(new RoundTransform(5)).into(dvh.thumb);
+            //Pussy.$(dvh.itemView.getContext()).load(ScriptRuntime.toString(obj.get("thumb"))).execute().anime(Anim.fade(350)).transformer(new CropTransformer(Gravity.CENTER),new RoundTransformer(dvh.itemView.getResources().getDisplayMetrics(),5)).into(dvh.thumb);
 			String info=ScriptRuntime.toString(obj.get("info"));
 			dvh.des.setText(info==null?null:Html.fromHtml(info));
 			String desc=ScriptRuntime.toString(obj.get("desc"));
 			dvh.description.setText(desc==null?null:Html.fromHtml(desc));
-			Pussy.$(dvh.itemView.getContext()).load(ScriptRuntime.toString(obj.get("thumb"))).execute().anime(Anim.fade(500)).transformer(new CropTransformer(Gravity.CENTER),new com.moe.pussy.transformer.BlurTransformer(55),new RoundTransformer(dvh.itemView.getResources().getDisplayMetrics(),5)).into((View)dvh.thumb.getParent());
+            Neko.with((View)dvh.thumb.getParent()).load(ScriptRuntime.toString(obj.get("thumb"))).asBitmap().scaleType(ScaleType.CENTER_CROP).transform(new RoundTransform(5),new BlurTransform(15)).into((View)dvh.thumb.getParent());
+			//Pussy.$(dvh.itemView.getContext()).load(ScriptRuntime.toString(obj.get("thumb"))).execute().anime(Anim.fade(500)).transformer(new CropTransformer(Gravity.CENTER),new com.moe.pussy.transformer.BlurTransformer(55),new RoundTransformer(dvh.itemView.getResources().getDisplayMetrics(),5)).into((View)dvh.thumb.getParent());
 			
 		}else
 		if(p1 instanceof PostViewholder){
@@ -73,7 +81,8 @@ public class PostAdapter<T extends PostAdapter.BaseViewholder> extends RecyclerV
 			if(des==null)
 				des="";
 			pvh.des.setText(des.toString());
-			Pussy.$(pvh.itemView.getContext()).load(ScriptRuntime.toString(obj.get("thumb"))).execute().delay(150).anime(Anim.fade(150)).transformer(new CropTransformer(Gravity.CENTER),new RoundTransformer(pvh.itemView.getResources().getDisplayMetrics(),5)).into(pvh.thumb);
+            Neko.with(pvh.thumb).load(ScriptRuntime.toString(obj.get("thumb"))).asBitmap().placeHolder(new ColorDrawable(0xffff0000)).error(new ColorDrawable(0xff000000)).scaleType(ScaleType.CENTER_CROP).transform(new RoundTransform(5)).into(pvh.thumb);
+			//Pussy.$(pvh.itemView.getContext()).load(ScriptRuntime.toString(obj.get("thumb"))).execute().delay(150).anime(Anim.fade(150)).transformer(new CropTransformer(Gravity.CENTER),new RoundTransformer(pvh.itemView.getResources().getDisplayMetrics(),5)).into(pvh.thumb);
 		}else if(p1 instanceof TitleViewholder){
 			TitleViewholder tvh=(PostAdapter.TitleViewholder) p1;
 			tvh.summary.setVisibility(obj.get("click")==null?View.INVISIBLE:View.VISIBLE);
