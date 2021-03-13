@@ -26,10 +26,7 @@ function request(opt) {
         opt.url = opt.url || '';
         opt.data = opt.data || null;
         opt.headers=opt.headers||{};
-       var conn=new java.net.URL(opt.url).openConnection();
-	   if(conn instanceof javax.net.ssl.HttpsUrlConnection){
-		   
-	   }
+       var conn=open(opt.url);
 	   conn.setRequestMethod(opt.method);
 	   for(let header in opt.headers){
 		   conn.setRequestProperty(header,opt.headers[header]);
@@ -54,7 +51,8 @@ function request(opt) {
 		   string:()=>{return bytearray.toString();},
 		   bytes:()=>{return bytearray.toBytes();},
 		   json:()=>{return JSON.parse(bytearray.toString()+"");},
-		   close:()=>{bytearray.close();conn.disconnect();}
+		   close:()=>{bytearray.close();conn.disconnect();},
+           eval:()=>{return eval("("+bytearray.toString()+")");}
 	   }
 }
 function ajax(opt,callback){

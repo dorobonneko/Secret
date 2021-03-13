@@ -21,6 +21,7 @@ android {
 
 dependencies {
 	//implementation("io.coil-kt:coil:0.11.0")
+    api project('..:..:PinterestLikeAdapterView:library')
     api project('..:..:Neko:neko')
 	compile 'org.jsoup:jsoup:+'
 	api 'com.android.support:recyclerview-v7:27.+'

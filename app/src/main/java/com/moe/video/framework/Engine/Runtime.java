@@ -24,6 +24,18 @@ import java.io.FileNotFoundException;
 import com.moe.video.framework.util.StringUtil;
 import java.io.FileInputStream;
 import com.moe.pussy.Pussy;
+import javax.net.ssl.SSLContext;
+import java.security.NoSuchAlgorithmException;
+import javax.net.ssl.X509TrustManager;
+import javax.net.ssl.TrustManager;
+import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
+import java.security.cert.CertificateException;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLSocketFactory;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.io.IOException;
 
 public class Runtime 
 {
@@ -31,13 +43,50 @@ public class Runtime
 	private Fragment fragment;
 	private Handler mHandler;
 	public Window window;
+    private static SSLSocketFactory ssl;
 	public Runtime(Fragment fragment)
 	{
 		this.fragment=fragment;
 		window=new Window((AppBrandFragment)fragment);
 		mHandler=new Handler(Looper.getMainLooper());
 	}
+    public HttpURLConnection open(String url){
+        try {
+            HttpURLConnection huc=(HttpURLConnection) new URL(url).openConnection();
+            if(huc instanceof HttpsURLConnection)
+                ((HttpsURLConnection)huc).setSSLSocketFactory(getSSLSocketFactory());
+                return huc;
+        } catch (IOException e) {}
+        return null;
+    }
+    private SSLSocketFactory getSSLSocketFactory(){
+        if(ssl==null){
+            synchronized(SSLSocketFactory.class){
+                if(ssl==null){
+                    try {
+                        SSLContext sc = SSLContext.getInstance("TLS");
+                        sc.init(null, new TrustManager[]{new X509TrustManager(){
 
+                                         @Override
+                                         public void checkClientTrusted(X509Certificate[] p1, String p2) throws CertificateException {
+                                         }
+
+                                         @Override
+                                         public void checkServerTrusted(X509Certificate[] p1, String p2) throws CertificateException {
+                                         }
+
+                                         @Override
+                                         public X509Certificate[] getAcceptedIssuers() {
+                                             return new X509Certificate[0];
+                                         }
+                                     }}, new SecureRandom());
+                          ssl=sc.getSocketFactory();
+                    } catch (Exception e) {}
+                }
+            }
+        }
+        return ssl;
+    }
 	public void toast(final String msg)
 	{
 		final Context context=fragment.getContext();
@@ -88,6 +137,12 @@ public class Runtime
 	public void play(String json){
 		((ModelActivity)fragment.getActivity()).play(json);
 		}
+    public void alert(final String message){
+        mHandler.post(new Runnable(){
+            public void run(){
+        new AlertDialog.Builder(fragment.getActivity()).setMessage(message).show();
+        }});
+    }
 	public void _prompt(final String message,final String defaultValue,final Object result){
 		mHandler.post(new Runnable(){
 			public void run(){
