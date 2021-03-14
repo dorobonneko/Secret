@@ -23,11 +23,14 @@ import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.NativeObject;
 import org.mozilla.javascript.ScriptRuntime;
+import android.graphics.Rect;
 
 public class PostAdapter<T extends PostAdapter.BaseViewholder> extends RecyclerView.Adapter<T> {
 	private List data;
-	public PostAdapter(List data) {
+    private RecyclerView mRecyclerView;
+	public PostAdapter(List data,RecyclerView mRecyclerView) {
 		this.data = data;
+        this.mRecyclerView=mRecyclerView;
 	}
 	@Override
 	public T onCreateViewHolder(ViewGroup p1, int p2) {
@@ -83,7 +86,16 @@ public class PostAdapter<T extends PostAdapter.BaseViewholder> extends RecyclerV
 		}else if(p1 instanceof ImageViewHolder){
             ImageViewHolder ivh=(PostAdapter<T>.ImageViewHolder) p1;
            // Neko.with(ivh.view).load(ScriptRuntime.toString(obj.get("thumb"))).override(ScriptRuntime.toInt32(obj.getOrDefault("width",-1)),ScriptRuntime.toInt32(obj.getOrDefault("height",-1))).fade(150).into(ivh.view);
-            Neko.with(ivh.view).load(ScriptRuntime.toString(obj.get("thumb"))).fade(150).placeHolder(new ColorDrawable(randomColor())).into(ivh.view).reSize(ScriptRuntime.toInt32(obj.getOrDefault("width",-1)),ScriptRuntime.toInt32(obj.getOrDefault("height",-1)));
+           // Neko.with(ivh.view).load("https://ddd.ee").fade(150).error(new ColorDrawable(randomColor())).into(ivh.view).reSize(ScriptRuntime.toInt32(obj.getOrDefault("width",-1)),ScriptRuntime.toInt32(obj.getOrDefault("height",-1)));
+           int width=ScriptRuntime.toInt32(obj.getOrDefault("width",-1));
+           int height=ScriptRuntime.toInt32(obj.getOrDefault("height",-1));
+           
+           int viewWidth=mRecyclerView.getWidth()/2;
+           int viewHeight=(int)Math.floor(viewWidth/(float)width*height);
+           ViewGroup.LayoutParams params=new ViewGroup.LayoutParams(viewWidth,viewHeight);
+           ivh.view.setLayoutParams(params);
+           
+           Neko.with(ivh.view).load(ScriptRuntime.toString(obj.get("thumb"))).fade(150).placeHolder(new ColorDrawable(randomColor())).into(ivh.view);
         }
 	}
     public static int randomColor() {
@@ -209,10 +221,9 @@ public class PostAdapter<T extends PostAdapter.BaseViewholder> extends RecyclerV
         ImageView view;
         ImageViewHolder(View view) {
             super(view);
-            view.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.WRAP_CONTENT));
             
             this.view = (ImageView) view;
-            //this.view.setScaleType(ScaleType.FIT_CENTER);
+            this.view.setScaleType(ScaleType.CENTER_CROP);
             //view.setPadding(10,10,10,10);
             view.setOnClickListener(this);
         }

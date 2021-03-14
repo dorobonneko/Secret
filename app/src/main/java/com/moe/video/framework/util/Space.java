@@ -15,21 +15,24 @@ public class Space extends RecyclerView.ItemDecoration
 	public Space(Context context){
 		size=(int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,8,context.getResources().getDisplayMetrics());
 	}
+
+    
 	@Override
 	public void getItemOffsets(Rect outRect, View view, RecyclerView parent, RecyclerView.State state)
 	{
-		switch(parent.getAdapter().getItemViewType(parent.getChildAdapterPosition(view))){
-			case 1:
-				break;
+        int position=parent.getChildAdapterPosition(view);
+        if(position==-1)return;
+		switch(parent.getAdapter().getItemViewType(position)){
 			case 2:
                 outRect.set(size,size,size,size);
                 break;
             case 7:
+                
+                if(parent.getLayoutManager() instanceof StaggeredGridLayoutManager){
                 outRect.bottom = size;
-                int position = parent.getChildAdapterPosition(view);
                 StaggeredGridLayoutManager.LayoutParams params = (StaggeredGridLayoutManager.LayoutParams) view.getLayoutParams();
                 if (position == 0 || position == 1) {
-                    outRect.top = size;
+                    //outRect.top = size;
                 }
 
                 if (params.getSpanIndex() % 2 != 0) {
@@ -41,31 +44,9 @@ public class Space extends RecyclerView.ItemDecoration
                     outRect.left = size;
                     outRect.right = size / 2;
                 }
-                /*if(view.getLeft()<=view.getWidth()){
-                    outRect.set(size,size/2,size/2,size/2);
-                    
                 }else{
-                    outRect.set(size/2,size/2,size,size/2);
-                    
-                }*/
-                /*ViewGroup.LayoutParams params=view.getLayoutParams();
-                
-                if(params instanceof StaggeredGridLayoutManager.LayoutParams){
-                    StaggeredGridLayoutManager sgl=(StaggeredGridLayoutManager) parent.getLayoutManager();
-                    StaggeredGridLayoutManager.LayoutParams sgp=(StaggeredGridLayoutManager.LayoutParams) params;
-                    switch(sgp.getSpanIndex()%sgl.getSpanCount()){
-                        case 0:
-                            outRect.set(size,size/2,size/2,size/2);
-                            break;
-                        case 1:
-                            view.setAlpha(0.5f);
-                            outRect.set(size/2,size/2,size,size/2);
-                            break;
-                    }
-                    
-                }*/
-                //outRect.set(size,size,size,size);
-                //view.setPadding(size,size,size,size);
+                    outRect.set(size,size,size,size);
+                }
 				break;
 			
 		}

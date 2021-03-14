@@ -49,8 +49,12 @@ import android.graphics.drawable.PictureDrawable;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.app.AlertDialog;
 import android.graphics.Color;
+import com.moe.video.framework.Engine.Window;
+import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.RecyclerView.ItemAnimator.ItemHolderInfo;
+import android.support.v7.widget.RecyclerView.ViewHolder;
 
-public class AppBrandFragment extends Fragment implements SwipeRefreshLayout.OnRefreshListener,View.OnApplyWindowInsetsListener {
+public class AppBrandFragment extends Fragment implements Window.Callback,SwipeRefreshLayout.OnRefreshListener,View.OnApplyWindowInsetsListener {
 	private Packet mPacket;
 	private Engine mEngine;
 	private SwipeRefreshLayout refresh;
@@ -59,7 +63,37 @@ public class AppBrandFragment extends Fragment implements SwipeRefreshLayout.OnR
 	private int page=1;
 	private boolean canLoadMore=true;
 	private List data;
-    private String layout="grid";
+
+    @Override
+    public Packet getPacket() {
+        return mPacket;
+    }
+    
+    @Override
+    public void post(Runnable run) {
+        getActivity().runOnUiThread(run);
+    }
+
+    @Override
+    public void playVideo(String json) {
+        ((ModelActivity)getActivity()).play(json);
+    }
+
+
+
+
+    @Override
+    public void open(Bundle bundle) {
+        AppBrandFragment abf=new AppBrandFragment();
+        abf.setArguments(bundle);
+        getFragmentManager().beginTransaction().add(android.R.id.content, abf).addToBackStack(null).commitAllowingStateLoss();
+
+    }
+
+
+    public Engine getEngine() {
+        return mEngine;
+    }
 	public String getPackageName() {
 		return mPacket.packageName;
 	}
@@ -78,6 +112,7 @@ public class AppBrandFragment extends Fragment implements SwipeRefreshLayout.OnR
 		Bundle mBundle= getArguments();
 		String exe=mBundle.getString("exe");
 		try {
+            //mEngine.eval(new InputStreamReader(mPacket.getFile("fun.js")));
 			mEngine.eval(new InputStreamReader(mPacket.getFile(exe)));
         } catch (Exception e) {
 			new AlertDialog.Builder(getContext()).setMessage(e.toString()).show();
@@ -105,11 +140,11 @@ public class AppBrandFragment extends Fragment implements SwipeRefreshLayout.OnR
 
                 @Override
                 public void run() {
-                    p1.setPadding(p2.getSystemWindowInsetLeft(), p2.getSystemWindowInsetTop()+toolbar.getHeight(), p2.getSystemWindowInsetRight(), p2.getSystemWindowInsetBottom());
-                    
+                    p1.setPadding(p2.getSystemWindowInsetLeft(), p2.getSystemWindowInsetTop() + toolbar.getHeight(), p2.getSystemWindowInsetRight(), p2.getSystemWindowInsetBottom());
+
                 }
             });
-        
+
 		return p2;
 	}
 
@@ -177,13 +212,19 @@ public class AppBrandFragment extends Fragment implements SwipeRefreshLayout.OnR
         mRecyclerView.setClipToPadding(false);
         mRecyclerView.setOnApplyWindowInsetsListener(this);
         mRecyclerView.requestApplyInsets();
+        //((DefaultItemAnimator)mRecyclerView.getItemAnimator()).setSupportsChangeAnimations(false);
 		mRecyclerView.addItemDecoration(new Space(getContext()));
         
-		mRecyclerView.setAdapter(pa = new PostAdapter(data = new ArrayList()));
+		mRecyclerView.setAdapter(pa = new PostAdapter(data = new ArrayList(),mRecyclerView));
 		mRecyclerView.addOnScrollListener(new Scroll());
         try {
             mRecyclerView.setBackgroundColor(Color.parseColor(ScriptRuntime.toString(mEngine.eval("module.bgColor"))));
         } catch (Exception e) {}
+        try {
+            initLayout(ScriptRuntime.toString(mEngine.eval("module.layout")));
+        } catch (Exception e) {
+            initLayout("grid");
+        }
 		reload();
 
 	}
@@ -212,8 +253,7 @@ public class AppBrandFragment extends Fragment implements SwipeRefreshLayout.OnR
 			public void run() {
 				try {
 					final NativeObject data=(NativeObject) mEngine.eval("module.exports.fetch(" + getArguments().getString("args", "undefined") + "," + page + ");");
-					layout = ScriptRuntime.toString(data.getOrDefault("layout", "grid"));
-                    final NativeArray items=(NativeArray) data.get("items");
+					final NativeArray items=(NativeArray) data.get("items");
 					getActivity().runOnUiThread(new Runnable(){
 
 							@Override
@@ -221,14 +261,16 @@ public class AppBrandFragment extends Fragment implements SwipeRefreshLayout.OnR
 								refresh.setRefreshing(false);
 								canLoadMore = page < ScriptRuntime.toInt32(data.get("nextPage"));
 								if (page == 1) {
+                                    int size=AppBrandFragment.this.data.size();
 									AppBrandFragment.this.data.clear();
-									pa.notifyDataSetChanged();
+									pa.notifyItemRangeRemoved(0,size);
                                     //重建布局
-                                    initLayout();
+
 									if (items != null) {
                                         AppBrandFragment.this.data.addAll(items);
                                         pa.notifyItemRangeInserted(0, items.size());
 									}
+                                    //pa.notifyDataSetChanged();
 								} else {
 									int count=pa.getItemCount();
 									if (items != null) {
@@ -241,23 +283,32 @@ public class AppBrandFragment extends Fragment implements SwipeRefreshLayout.OnR
 							}
 						});
 				} catch (final Exception e) {
-					getView().post(new Runnable(){
+                    if (getView() != null)
+                        getView().post(new Runnable(){
 
-							@Override
-							public void run() {
-								refresh.setRefreshing(false);
-								new AlertDialog.Builder(getActivity()).setMessage(e.getMessage()).show();
-							}
-						});
+                                @Override
+                                public void run() {
+                                    refresh.setRefreshing(false);
+                                    new AlertDialog.Builder(getActivity()).setMessage(e.getMessage()).show();
+                                }
+                            });
 				}
 			}
 		}.start();
 	}
-    private void initLayout() {
+    private void initLayout(String layout) {
         switch (layout) {
-            case "grid":
 
-                 mRecyclerView.setLayoutManager(new GridLayoutManager(getContext(), 6));
+            case "waterflow":
+                //瀑布流
+                mRecyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
+                StaggeredGridLayoutManager sglm=(StaggeredGridLayoutManager) mRecyclerView.getLayoutManager();
+                sglm.setAutoMeasureEnabled(true);
+                //sglm.setGapStrategy(sglm.GAP_HANDLING_NONE);
+                break;
+            default:
+
+                mRecyclerView.setLayoutManager(new GridLayoutManager(getContext(), 6));
                 ((GridLayoutManager)mRecyclerView.getLayoutManager()).setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup(){
 
                         @Override
@@ -277,20 +328,13 @@ public class AppBrandFragment extends Fragment implements SwipeRefreshLayout.OnR
                         }
                     });
                 break;
-            case "waterflow":
-                //瀑布流
-                 mRecyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
-                 StaggeredGridLayoutManager sglm=(StaggeredGridLayoutManager) mRecyclerView.getLayoutManager();
-                sglm.setAutoMeasureEnabled(true);
-                break;
         }
     }
 	class Scroll extends RecyclerView.OnScrollListener {
 
 		@Override
 		public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-			super.onScrolled(recyclerView, dx, dy);
-            if (dy > 0 && !refresh.isRefreshing() && canLoadMore) {
+			if (dy > 0 && !refresh.isRefreshing() && canLoadMore) {
                 RecyclerView.LayoutManager lm= recyclerView.getLayoutManager();
                 if (lm instanceof GridLayoutManager) {
                     GridLayoutManager gld=(GridLayoutManager)lm;
@@ -305,8 +349,19 @@ public class AppBrandFragment extends Fragment implements SwipeRefreshLayout.OnR
                         loadMore();
                 }
             }
-            
+
 		}
+
+        @Override
+        public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+            //if(newState==recyclerView.SCROLL_STATE_IDLE){
+                //recyclerView.invalidateItemDecorations();
+            //}
+            /*RecyclerView.LayoutManager lm=recyclerView.getLayoutManager();
+            if(lm instanceof StaggeredGridLayoutManager)
+                ((StaggeredGridLayoutManager)lm).invalidateSpanAssignments();*/
+        }
+        
 
 	}
 

@@ -11,12 +11,13 @@ import org.mozilla.javascript.NativeJSON;
 import java.io.Reader;
 import org.jsoup.Jsoup;
 import android.app.Fragment;
+import com.moe.video.framework.activity.fragment.AppBrandFragment;
 
 
 public class Engine
 {
 	private RhinoScriptEngine engine;
-	public Engine(Fragment fragment){
+	public Engine(Window.Callback fragment){
 		engine=new RhinoScriptEngine();
 		final Runtime runtime=new Runtime(fragment);
 		engine.put("runtime",runtime);

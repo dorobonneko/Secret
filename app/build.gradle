@@ -20,11 +20,11 @@ android {
 }
 
 dependencies {
+    
 	//implementation("io.coil-kt:coil:0.11.0")
-    api project('..:..:PinterestLikeAdapterView:library')
     api project('..:..:Neko:neko')
 	compile 'org.jsoup:jsoup:+'
-	api 'com.android.support:recyclerview-v7:27.+'
+	api 'com.android.support:recyclerview-v7:26.+'
 	//compile 'com.faendir.rhino:rhino-android:+'
 	//compile 'com.eclipsesource.j2v8:j2v8:+'
 	implementation 'io.apisense:rhino-android:+'

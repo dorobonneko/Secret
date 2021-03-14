@@ -23,7 +23,6 @@ import java.io.InputStreamReader;
 import java.io.FileNotFoundException;
 import com.moe.video.framework.util.StringUtil;
 import java.io.FileInputStream;
-import com.moe.pussy.Pussy;
 import javax.net.ssl.SSLContext;
 import java.security.NoSuchAlgorithmException;
 import javax.net.ssl.X509TrustManager;
@@ -36,214 +35,232 @@ import javax.net.ssl.SSLSocketFactory;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.io.IOException;
+import org.mozilla.javascript.NativeObject;
+import java.util.Map;
+import java.util.HashMap;
+import org.mozilla.javascript.ScriptRuntime;
+import org.mozilla.javascript.NativeArray;
+import java.util.Collections;
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.TreeMap;
+import android.util.ArrayMap;
+import java.util.LinkedHashMap;
+import javax.script.ScriptException;
 
-public class Runtime 
-{
-	
-	private Fragment fragment;
+public class Runtime {
+
+	private Window.Callback fragment;
 	private Handler mHandler;
 	public Window window;
     private static SSLSocketFactory ssl;
-	public Runtime(Fragment fragment)
-	{
-		this.fragment=fragment;
-		window=new Window((AppBrandFragment)fragment);
-		mHandler=new Handler(Looper.getMainLooper());
+	public Runtime(Window.Callback callback) {
+		this.fragment = callback;
+		window = new Window(callback);
+		mHandler = new Handler(Looper.getMainLooper());
 	}
-    public HttpURLConnection open(String url){
+    public Object exec(String path) throws ScriptException {
+        return window.getEngine().eval(new InputStreamReader(window.getPackage().getFile(path)));
+    }
+    public void options(NativeObject obj, final Function callback) {
+        final String title=ScriptRuntime.toString(obj.get("title"));
+        final String defaultValue=ScriptRuntime.toString(obj.get("defaultValue"));
+        NativeArray opts=(NativeArray) obj.get("options");
+        final Map<String,String> opt=new LinkedHashMap<String,String>();
+        if (opts != null)
+            for (int i=0;i < opts.size();i++) {
+                NativeObject item=(NativeObject) opts.get(i);
+
+                opt.put(ScriptRuntime.toString(item.get("name")), ScriptRuntime.toString(item.get("value")));
+            }
+        final String[] values=opt.values().toArray(new String[0]);
+        final int index=Arrays.asList(values).indexOf(defaultValue);
+
+        mHandler.post(new Runnable(){
+
+                @Override
+                public void run() {
+                    new AlertDialog.Builder(fragment.getContext()).setTitle(title).setSingleChoiceItems(opt.keySet().toArray(new String[0]), index, new DialogInterface.OnClickListener(){
+
+                            @Override
+                            public void onClick(DialogInterface p1, int p2) {
+                                org.mozilla.javascript.Context context=org.mozilla.javascript.Context.enter();
+                                callback.call(context, callback, callback, new Object[]{values[p2]});
+                                context.exit();
+                                p1.dismiss();
+                            }
+                        }).show();
+                }
+            });
+    }
+    public HttpURLConnection open(String url) {
         try {
             HttpURLConnection huc=(HttpURLConnection) new URL(url).openConnection();
-            if(huc instanceof HttpsURLConnection)
+            if (huc instanceof HttpsURLConnection)
                 ((HttpsURLConnection)huc).setSSLSocketFactory(getSSLSocketFactory());
-                return huc;
+            return huc;
         } catch (IOException e) {}
         return null;
     }
-    private SSLSocketFactory getSSLSocketFactory(){
-        if(ssl==null){
-            synchronized(SSLSocketFactory.class){
-                if(ssl==null){
+
+    private SSLSocketFactory getSSLSocketFactory() {
+        if (ssl == null) {
+            synchronized (SSLSocketFactory.class) {
+                if (ssl == null) {
                     try {
                         SSLContext sc = SSLContext.getInstance("TLS");
                         sc.init(null, new TrustManager[]{new X509TrustManager(){
 
-                                         @Override
-                                         public void checkClientTrusted(X509Certificate[] p1, String p2) throws CertificateException {
-                                         }
+                                        @Override
+                                        public void checkClientTrusted(X509Certificate[] p1, String p2) throws CertificateException {
+                                        }
 
-                                         @Override
-                                         public void checkServerTrusted(X509Certificate[] p1, String p2) throws CertificateException {
-                                         }
+                                        @Override
+                                        public void checkServerTrusted(X509Certificate[] p1, String p2) throws CertificateException {
+                                        }
 
-                                         @Override
-                                         public X509Certificate[] getAcceptedIssuers() {
-                                             return new X509Certificate[0];
-                                         }
-                                     }}, new SecureRandom());
-                          ssl=sc.getSocketFactory();
+                                        @Override
+                                        public X509Certificate[] getAcceptedIssuers() {
+                                            return new X509Certificate[0];
+                                        }
+                                    }}, new SecureRandom());
+                        ssl = sc.getSocketFactory();
                     } catch (Exception e) {}
                 }
             }
         }
         return ssl;
     }
-	public void toast(final String msg)
-	{
+	public void toast(final String msg) {
 		final Context context=fragment.getContext();
-		if(context==null)return;
-		if(Thread.currentThread()!=Looper.getMainLooper().getThread())
-		{
+		if (context == null)return;
+		if (Thread.currentThread() != Looper.getMainLooper().getThread()) {
 			mHandler.post(new Runnable(){
 
 					@Override
-					public void run()
-					{
-						Toast.makeText(context,msg,Toast.LENGTH_SHORT).show();
+					public void run() {
+						Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
 					}
 				});
-		}else
-		Toast.makeText(context,msg,Toast.LENGTH_SHORT).show();
+		} else
+            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
 	}
-	
-	public byte[] Byte(int size){
+
+	public byte[] Byte(int size) {
 		return new byte[size];
 	}
-	public Object $require(String name){
-		switch(name){
+	public Object $require(String name) {
+		switch (name) {
 			case "jsoup":
 				return new Jsoup();
 			case "html":
 				return Parser.htmlParser();
 			case "database":
-				return new Database(fragment.getContext(),window.getPackageName());
-			case "pussy":
-				return new PussyProxy(Pussy.$(fragment.getActivity()));
-		}
+				return new Database(fragment.getContext(), window.getPackageName());
+			}
 		return null;
 	}
-	public void open(String type,String args){
-		Fragment f=new AppBrandFragment();
-				Bundle b=new Bundle();
-				b.putString("exe",type.concat(".js"));
-				b.putString("args",args);
-				f.setArguments(b);
-				fragment.getFragmentManager().beginTransaction().add(android.R.id.content,f).addToBackStack(null).commitAllowingStateLoss();
-		
+	public void open(String type, String args) {
+		Bundle b=new Bundle();
+        b.putString("exe", type.concat(".js"));
+        b.putString("args", args);
+        fragment.open(b);		
 	}
-	public void copy(String text){
+	public void copy(String text) {
 		ClipboardManager cm=(ClipboardManager) fragment.getContext().getSystemService(android.content.Context.CLIPBOARD_SERVICE);
 		cm.setText(text);
 	}
-	public void play(String json){
-		((ModelActivity)fragment.getActivity()).play(json);
-		}
-    public void alert(final String message){
-        mHandler.post(new Runnable(){
-            public void run(){
-        new AlertDialog.Builder(fragment.getActivity()).setMessage(message).show();
-        }});
+	public void play(String json) {
+		fragment.playVideo(json);
     }
-	public void _prompt(final String message,final String defaultValue,final Object result){
+    public void alert(final String message) {
+        mHandler.post(new Runnable(){
+                public void run() {
+                    new AlertDialog.Builder(fragment.getContext()).setMessage(message).show();
+                }});
+    }
+	public void _prompt(final String message, final String defaultValue, final Object result) {
 		mHandler.post(new Runnable(){
-			public void run(){
-		final EditText input=new EditText(fragment.getContext());
-		input.setSingleLine();
-		input.setText(defaultValue);
-		final AlertDialog dialog=new AlertDialog.Builder(fragment.getActivity()).setTitle(message).setView(input).setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener(){
+                public void run() {
+                    final EditText input=new EditText(fragment.getContext());
+                    input.setSingleLine();
+                    input.setText(defaultValue);
+                    final AlertDialog dialog=new AlertDialog.Builder(fragment.getContext()).setTitle(message).setView(input).setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener(){
 
-				@Override
-				public void onClick(DialogInterface p1, int p2)
-				{
-					Function fun=(Function) result;
-					org.mozilla.javascript.Context context=org.mozilla.javascript.Context.enter();
-					fun.call(context,fun,fun,new Object[]{input.getText().toString()});
-					context.exit();
-				}
-			}).setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener(){
+                            @Override
+                            public void onClick(DialogInterface p1, int p2) {
+                                Function fun=(Function) result;
+                                org.mozilla.javascript.Context context=org.mozilla.javascript.Context.enter();
+                                fun.call(context, fun, fun, new Object[]{input.getText().toString()});
+                                context.exit();
+                            }
+                        }).setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener(){
 
-				@Override
-				public void onClick(DialogInterface p1, int p2)
-				{
-					p1.cancel();
-				}
-			}).setOnCancelListener(new DialogInterface.OnCancelListener(){
+                            @Override
+                            public void onClick(DialogInterface p1, int p2) {
+                                p1.cancel();
+                            }
+                        }).setOnCancelListener(new DialogInterface.OnCancelListener(){
 
-				@Override
-				public void onCancel(DialogInterface p1)
-				{
-					Function fun=(Function) result;
-					org.mozilla.javascript.Context context=org.mozilla.javascript.Context.enter();
-					fun.call(context,fun,fun,new Object[]{false});
-					context.exit();
-				}
-			}).show();
-			}});
+                            @Override
+                            public void onCancel(DialogInterface p1) {
+                                Function fun=(Function) result;
+                                org.mozilla.javascript.Context context=org.mozilla.javascript.Context.enter();
+                                fun.call(context, fun, fun, new Object[]{false});
+                                context.exit();
+                            }
+                        }).show();
+                }});
 	}
-	public void _confirm(final String title,final String message,final Object result){
+	public void _confirm(final String title, final String message, final Object result) {
 		mHandler.post(new Runnable(){
-			public void run(){
-		final AlertDialog dialog=new AlertDialog.Builder(fragment.getActivity()).setTitle(title).setMessage(message).setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener(){
+                public void run() {
+                    final AlertDialog dialog=new AlertDialog.Builder(fragment.getContext()).setTitle(title).setMessage(message).setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener(){
 
-				@Override
-				public void onClick(DialogInterface p1, int p2)
-				{
-					Function fun=(Function) result;
-					org.mozilla.javascript.Context context=org.mozilla.javascript.Context.enter();
-					fun.call(context,fun,fun,new Object[]{true});
-					context.exit();
-				}
-			}).setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener(){
+                            @Override
+                            public void onClick(DialogInterface p1, int p2) {
+                                Function fun=(Function) result;
+                                org.mozilla.javascript.Context context=org.mozilla.javascript.Context.enter();
+                                fun.call(context, fun, fun, new Object[]{true});
+                                context.exit();
+                            }
+                        }).setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener(){
 
-				@Override
-				public void onClick(DialogInterface p1, int p2)
-				{
-					p1.cancel();
-				}
-			}).setOnCancelListener(new DialogInterface.OnCancelListener(){
+                            @Override
+                            public void onClick(DialogInterface p1, int p2) {
+                                p1.cancel();
+                            }
+                        }).setOnCancelListener(new DialogInterface.OnCancelListener(){
 
-				@Override
-				public void onCancel(DialogInterface p1)
-				{
-					Function fun=(Function) result;
-					org.mozilla.javascript.Context context=org.mozilla.javascript.Context.enter();
-					fun.call(context,fun,fun,new Object[]{false});
-					context.exit();
-				}
-			}).show();
-			}
+                            @Override
+                            public void onCancel(DialogInterface p1) {
+                                Function fun=(Function) result;
+                                org.mozilla.javascript.Context context=org.mozilla.javascript.Context.enter();
+                                fun.call(context, fun, fun, new Object[]{false});
+                                context.exit();
+                            }
+                        }).show();
+                }
 			});
 	}
-	public String load(String uri) throws Exception{
+	public String load(String uri) throws Exception {
 		Uri url=Uri.parse(uri);
-		if(url.getScheme()!=null)
-		switch(url.getScheme()){
-			case "file":
-				String path=url.getPath();
-				if(path.startsWith("/android_asset/"))
-					return StringUtil.toString(fragment.getContext().getAssets().open(path.substring(15)));
+		if (url.getScheme() != null)
+            switch (url.getScheme()) {
+                case "file":
+                    String path=url.getPath();
+                    if (path.startsWith("/android_asset/"))
+                        return StringUtil.toString(fragment.getContext().getAssets().open(path.substring(15)));
 					else
-					return StringUtil.toString(new FileInputStream(uri));
-		}else{
-			if(uri.startsWith("/"))
+                        return StringUtil.toString(new FileInputStream(uri));
+            }else {
+			if (uri.startsWith("/"))
 				return StringUtil.toString(new FileInputStream(uri));
-				else
+            else
 				return null;
+
 		}
-		 return StringUtil.toString(fragment.getContext().getContentResolver().openInputStream(Uri.parse(uri)));
+        return StringUtil.toString(fragment.getContext().getContentResolver().openInputStream(Uri.parse(uri)));
 	}
-	/*public void prompt(String message,Object result){
-		prompt(message,null,result);
-	}*/
-	public class PussyProxy{
-		private Pussy pussy;
-		PussyProxy(Pussy pussy){
-			this.pussy=pussy;
-		}
-		public int getActiveResourceSize(){
-			return pussy.getActiveResource().size();
-		}
-		public String getActiveResource(){
-			return pussy.getActiveResource().toString();
-		}
-	}
+	
 }

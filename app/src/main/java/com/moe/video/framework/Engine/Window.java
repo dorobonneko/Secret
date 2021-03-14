@@ -10,36 +10,40 @@ import java.io.InputStream;
 import org.mozilla.javascript.Function;
 import java.io.IOException;
 import com.caverock.androidsvg.SVGParseException;
+import android.os.Bundle;
 
 public class Window
 {
-	private AppBrandFragment f;
-	public Window(AppBrandFragment f){
-		this.f=f;
+	private Window.Callback callback;
+	public Window(Window.Callback f){
+		this.callback=f;
 	}
+    public Engine getEngine(){
+        return callback.getEngine();
+    }
 	public String getPackageName(){
-		return f.getPackageName();
+		return callback.getPackageName();
 	}
 	public void refresh(){
-		f.refresh();
+		callback.refresh();
 	}
 	public void next(){
-		f.next();
+		callback.next();
 	}
 	public void close(){
-		f.close();
+		callback.close();
 	}
 	public void reload(){
-		f.reload();
+		callback.reload();
 	}
 	public Packet getPackage(){
-		return ((ModelActivity)f.getActivity()).getPacket();
+		return callback.getPacket();
 	}
 	public Context getContext(){
-		return f.getContext();
+		return callback.getContext();
 	}
-	public void post(final Object run){
-		f.getActivity().runOnUiThread(new Runnable(){
+	public void post(final Function run){
+		callback.post(new Runnable(){
 
 				@Override
 				public void run()
@@ -52,7 +56,7 @@ public class Window
 			});
 	}
 	public Menu getMenu(){
-		android.view.Menu m=f.getMenu();
+		android.view.Menu m=callback.getMenu();
 		if(m!=null)
 		return new Menu(m);
 		return null;
@@ -125,5 +129,18 @@ public class Window
 			}
 		}
 	}
-	
+	public static interface Callback{
+        public Engine getEngine();
+        public String getPackageName();
+        public void refresh()
+        public void next()
+        public void close()
+        public void reload()
+        public Packet getPacket()
+        public Context getContext()
+        public android.view.Menu getMenu();
+        public void post(Runnable run);
+        public void playVideo(String url);
+        public void open(Bundle bundle)
+    }
 }

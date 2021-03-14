@@ -30,7 +30,6 @@ import android.widget.FrameLayout;
 import android.view.Gravity;
 import com.moe.video.framework.R;
 import android.app.AlertDialog;
-import com.moe.pussy.Pussy;
 import com.moe.neko.Neko;
 
 public abstract class ModelActivity extends Activity
