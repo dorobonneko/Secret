@@ -50,15 +50,18 @@ import javax.script.ScriptException;
 
 public class Runtime {
 
-	private Window.Callback fragment;
+	private Runtime.Callback callback;
 	private Handler mHandler;
 	public Window window;
+    public Image image;
     private static SSLSocketFactory ssl;
-	public Runtime(Window.Callback callback) {
-		this.fragment = callback;
-		window = new Window(callback);
+	public Runtime(Runtime.Callback callback) {
+		this.callback = callback;
+		window = new Window((Window.Callback)callback);
+        image=new Image((Image.Callback)callback);
 		mHandler = new Handler(Looper.getMainLooper());
 	}
+  
     public Object exec(String path) throws ScriptException {
         return window.getEngine().eval(new InputStreamReader(window.getPackage().getFile(path)));
     }
@@ -80,7 +83,7 @@ public class Runtime {
 
                 @Override
                 public void run() {
-                    new AlertDialog.Builder(fragment.getContext()).setTitle(title).setSingleChoiceItems(opt.keySet().toArray(new String[0]), index, new DialogInterface.OnClickListener(){
+                    new AlertDialog.Builder(window.getContext()).setTitle(title).setSingleChoiceItems(opt.keySet().toArray(new String[0]), index, new DialogInterface.OnClickListener(){
 
                             @Override
                             public void onClick(DialogInterface p1, int p2) {
@@ -132,7 +135,7 @@ public class Runtime {
         return ssl;
     }
 	public void toast(final String msg) {
-		final Context context=fragment.getContext();
+		final Context context=window.getContext();
 		if (context == null)return;
 		if (Thread.currentThread() != Looper.getMainLooper().getThread()) {
 			mHandler.post(new Runnable(){
@@ -156,7 +159,7 @@ public class Runtime {
 			case "html":
 				return Parser.htmlParser();
 			case "database":
-				return new Database(fragment.getContext(), window.getPackageName());
+				return new Database(window.getContext(), window.getPackageName());
 			}
 		return null;
 	}
@@ -164,28 +167,28 @@ public class Runtime {
 		Bundle b=new Bundle();
         b.putString("exe", type.concat(".js"));
         b.putString("args", args);
-        fragment.open(b);		
+        ((Window.Callback)callback).open(b);		
 	}
 	public void copy(String text) {
-		ClipboardManager cm=(ClipboardManager) fragment.getContext().getSystemService(android.content.Context.CLIPBOARD_SERVICE);
+		ClipboardManager cm=(ClipboardManager) window.getContext().getSystemService(android.content.Context.CLIPBOARD_SERVICE);
 		cm.setText(text);
 	}
 	public void play(String json) {
-		fragment.playVideo(json);
+		window.playVideo(json);
     }
     public void alert(final String message) {
         mHandler.post(new Runnable(){
                 public void run() {
-                    new AlertDialog.Builder(fragment.getContext()).setMessage(message).show();
+                    new AlertDialog.Builder(window.getContext()).setMessage(message).show();
                 }});
     }
 	public void _prompt(final String message, final String defaultValue, final Object result) {
 		mHandler.post(new Runnable(){
                 public void run() {
-                    final EditText input=new EditText(fragment.getContext());
+                    final EditText input=new EditText(window.getContext());
                     input.setSingleLine();
                     input.setText(defaultValue);
-                    final AlertDialog dialog=new AlertDialog.Builder(fragment.getContext()).setTitle(message).setView(input).setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener(){
+                    final AlertDialog dialog=new AlertDialog.Builder(window.getContext()).setTitle(message).setView(input).setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener(){
 
                             @Override
                             public void onClick(DialogInterface p1, int p2) {
@@ -215,7 +218,7 @@ public class Runtime {
 	public void _confirm(final String title, final String message, final Object result) {
 		mHandler.post(new Runnable(){
                 public void run() {
-                    final AlertDialog dialog=new AlertDialog.Builder(fragment.getContext()).setTitle(title).setMessage(message).setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener(){
+                    final AlertDialog dialog=new AlertDialog.Builder(window.getContext()).setTitle(title).setMessage(message).setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener(){
 
                             @Override
                             public void onClick(DialogInterface p1, int p2) {
@@ -250,7 +253,7 @@ public class Runtime {
                 case "file":
                     String path=url.getPath();
                     if (path.startsWith("/android_asset/"))
-                        return StringUtil.toString(fragment.getContext().getAssets().open(path.substring(15)));
+                        return StringUtil.toString(window.getContext().getAssets().open(path.substring(15)));
 					else
                         return StringUtil.toString(new FileInputStream(uri));
             }else {
@@ -260,7 +263,7 @@ public class Runtime {
 				return null;
 
 		}
-        return StringUtil.toString(fragment.getContext().getContentResolver().openInputStream(Uri.parse(uri)));
+        return StringUtil.toString(window.getContext().getContentResolver().openInputStream(Uri.parse(uri)));
 	}
-	
+	public static interface Callback{}
 }

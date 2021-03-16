@@ -18,6 +18,9 @@ public class Window
 	public Window(Window.Callback f){
 		this.callback=f;
 	}
+    public void playVideo(String json){
+        callback.playVideo(json);
+    }
     public Engine getEngine(){
         return callback.getEngine();
     }
@@ -129,7 +132,7 @@ public class Window
 			}
 		}
 	}
-	public static interface Callback{
+	public static interface Callback extends Runtime.Callback{
         public Engine getEngine();
         public String getPackageName();
         public void refresh()
@@ -142,5 +145,5 @@ public class Window
         public void post(Runnable run);
         public void playVideo(String url);
         public void open(Bundle bundle)
-    }
+        }
 }

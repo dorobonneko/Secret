@@ -81,29 +81,7 @@ public abstract class ModelActivity extends Activity
 				});
 		}
 	}
-public void play(final String json){
-	if(Settings.canDrawOverlays(getApplicationContext())){
-					startActivity(new Intent(getApplicationContext(),VideoActivity.class).putExtra("data",json));
-						}else{
-							ModelActivity.this.data=json;
-						Intent request = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
-						request.setData(Uri.parse("package:" + getPackageName()));
-						request.removeFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-						startActivityForResult(request,14);
-						
-						}
 
-}
-
-@Override
-protected void onActivityResult(int requestCode, int resultCode, Intent data)
-{
-	super.onActivityResult(requestCode, resultCode, data);
-	if(requestCode==14&&resultCode==RESULT_OK){
-		startActivity(new Intent(getApplicationContext(),VideoActivity.class).putExtra("data",this.data));
-		
-	}
-}
 
 
 public Packet getPacket(){

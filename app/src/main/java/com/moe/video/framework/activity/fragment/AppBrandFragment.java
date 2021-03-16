@@ -53,8 +53,13 @@ import com.moe.video.framework.Engine.Window;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.RecyclerView.ItemAnimator.ItemHolderInfo;
 import android.support.v7.widget.RecyclerView.ViewHolder;
-
-public class AppBrandFragment extends Fragment implements Window.Callback,SwipeRefreshLayout.OnRefreshListener,View.OnApplyWindowInsetsListener {
+import android.content.Intent;
+import com.moe.video.framework.VideoActivity;
+import android.provider.Settings;
+import android.net.Uri;
+import com.moe.video.framework.util.StaticData;
+import com.moe.video.framework.Engine.Image;
+public class AppBrandFragment extends Fragment implements Image.Callback,Window.Callback,SwipeRefreshLayout.OnRefreshListener,View.OnApplyWindowInsetsListener {
 	private Packet mPacket;
 	private Engine mEngine;
 	private SwipeRefreshLayout refresh;
@@ -62,8 +67,8 @@ public class AppBrandFragment extends Fragment implements Window.Callback,SwipeR
 	private PostAdapter pa;
 	private int page=1;
 	private boolean canLoadMore=true;
-	private List data;
-
+	private List<NativeObject> data;
+    private String video;
     @Override
     public Packet getPacket() {
         return mPacket;
@@ -76,8 +81,40 @@ public class AppBrandFragment extends Fragment implements Window.Callback,SwipeR
 
     @Override
     public void playVideo(String json) {
-        ((ModelActivity)getActivity()).play(json);
+        if(Settings.canDrawOverlays(getContext())){
+            startActivity(new Intent(getContext(),VideoActivity.class).putExtra("data",json));
+        }else{
+            video=json;
+            Intent request = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
+            request.setData(Uri.parse("package:" + getPackageName()));
+            request.removeFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivityForResult(request,14);
+
+        }
     }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode==14&&resultCode==Activity.RESULT_OK){
+            startActivity(new Intent(getContext(),VideoActivity.class).putExtra("data",this.video));
+
+        }
+    }
+
+    @Override
+    public void moebooru(int id,String key) {
+        Bundle bundle=new Bundle();
+        bundle.putString("type","moebooru");
+        bundle.putString("id",id+"");
+        bundle.putString("key",key);
+        StaticData.put(id+"",new ArrayList<NativeObject>(data));
+         PhotoViewFragment pvf=new PhotoViewFragment();
+         pvf.setArguments(bundle);
+        getFragmentManager().beginTransaction().add(android.R.id.content, pvf).addToBackStack(null).commitAllowingStateLoss();
+        
+        }
+
 
 
 
@@ -304,7 +341,7 @@ public class AppBrandFragment extends Fragment implements Window.Callback,SwipeR
                 mRecyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
                 StaggeredGridLayoutManager sglm=(StaggeredGridLayoutManager) mRecyclerView.getLayoutManager();
                 sglm.setAutoMeasureEnabled(true);
-                //sglm.setGapStrategy(sglm.GAP_HANDLING_NONE);
+                sglm.setGapStrategy(sglm.GAP_HANDLING_NONE);
                 break;
             default:
 
@@ -354,9 +391,9 @@ public class AppBrandFragment extends Fragment implements Window.Callback,SwipeR
 
         @Override
         public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
-            //if(newState==recyclerView.SCROLL_STATE_IDLE){
-                //recyclerView.invalidateItemDecorations();
-            //}
+            if(newState==recyclerView.SCROLL_STATE_IDLE){
+                recyclerView.invalidateItemDecorations();
+            }
             /*RecyclerView.LayoutManager lm=recyclerView.getLayoutManager();
             if(lm instanceof StaggeredGridLayoutManager)
                 ((StaggeredGridLayoutManager)lm).invalidateSpanAssignments();*/

@@ -221,7 +221,9 @@ public class PostAdapter<T extends PostAdapter.BaseViewholder> extends RecyclerV
         ImageView view;
         ImageViewHolder(View view) {
             super(view);
-            
+            TypedArray ta=view.getContext().obtainStyledAttributes(new int[]{android.R.attr.selectableItemBackground});
+            view.setForeground(ta.getDrawable(0));
+            ta.recycle();
             this.view = (ImageView) view;
             this.view.setScaleType(ScaleType.CENTER_CROP);
             //view.setPadding(10,10,10,10);
