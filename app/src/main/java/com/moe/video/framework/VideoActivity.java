@@ -43,6 +43,7 @@ import android.media.AudioManager;
 import android.provider.Settings;
 import android.provider.Settings.SettingNotFoundException;
 import android.widget.Toast;
+import android.net.Uri;
 
 public class VideoActivity extends Activity implements TextureView.SurfaceTextureListener,MediaPlayer.OnPreparedListener,MediaPlayer.OnInfoListener,Handler.Callback,OnTouchListener,OnClickListener,SeekBar.OnSeekBarChangeListener,MediaPlayer.OnVideoSizeChangedListener,MediaPlayer.OnErrorListener,MediaPlayer.OnCompletionListener
 {
@@ -59,7 +60,7 @@ public class VideoActivity extends Activity implements TextureView.SurfaceTextur
 	private int scrollState,preSeek;
 	private TextView tips;
 	private AudioManager audio;
-	private int scaleType;
+	private int scaleType,index;
 	private String dataSource;
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -112,6 +113,12 @@ public class VideoActivity extends Activity implements TextureView.SurfaceTextur
 	}
 	private void changeSource(int index)
 	{
+        if(mMediaPlayer.getDuration()>0)
+            preSeek=mMediaPlayer.getCurrentPosition();
+        else
+            preSeek=0;
+        
+        this.index=index;
 		mMediaPlayer.stop();
 		mMediaPlayer.reset();
 		if (data != null)
@@ -187,6 +194,10 @@ public class VideoActivity extends Activity implements TextureView.SurfaceTextur
 	}
 
 	private void pause(){
+        if(mMediaPlayer.getDuration()>0)
+            preSeek=mMediaPlayer.getCurrentPosition();
+            else
+              preSeek=0;
 		mMediaPlayer.pause();
 		((ImageView)control.findViewById(R.id.playorpause)).setImageResource(R.drawable.play);
 		actions.set(0, new RemoteAction(Icon.createWithResource(this, R.drawable.play), "play", "play", PendingIntent.getBroadcast(this, 0, new Intent(getPackageName()).putExtra("action", "playorpause"), 0)));
@@ -306,10 +317,11 @@ public class VideoActivity extends Activity implements TextureView.SurfaceTextur
 			case p2.ACTION_UP:
 				if (!move)
 				{
-					if (control.getVisibility() == View.VISIBLE)
-						hide();
-					else
-						show();
+                    if(mHandler.hasMessages(2)){
+                        mHandler.removeMessages(2);
+                        mHandler.sendEmptyMessage(3);
+                    }else
+					mHandler.sendEmptyMessageDelayed(2,350);
 				}
 			case p2.ACTION_CANCEL:
 				tips.setText(null);
@@ -321,28 +333,41 @@ public class VideoActivity extends Activity implements TextureView.SurfaceTextur
 		}
 		return true;
 	}
+    private int checked_index;
 	private void showSource(){
 		try
 		{
-			if(mMediaPlayer.getDuration()>0)
-				preSeek=mMediaPlayer.getCurrentPosition();
-				else
-				preSeek=0;
-			JSONArray sources=data.getJSONArray("source");
+			final JSONArray sources=data.getJSONArray("source");
 			String[] items=new String[sources.length()];
 			for (int i=0;i < sources.length();i++)
 			{
 				JSONObject item=sources.getJSONObject(i);
-				items[i] = item.getString("src");
+				items[i] = item.getString("title");
 			}
-			new AlertDialog.Builder(this).setTitle("换源").setItems(items, new DialogInterface.OnClickListener(){
+			new AlertDialog.Builder(this).setTitle("换源").setSingleChoiceItems(items,index ,new DialogInterface.OnClickListener(){
 
 					@Override
 					public void onClick(DialogInterface p1, int p2)
 					{
-						changeSource(p2);
+                        checked_index=p2;
+						//changeSource(p2);
 					}
-				}).show();
+				}).setPositiveButton("下载", new DialogInterface.OnClickListener(){
+
+                    @Override
+                    public void onClick(DialogInterface p1, int p2) {
+                        try {
+                            pause();
+                            startActivity(new Intent().setDataAndType(Uri.parse(sources.getJSONObject(checked_index).getString("src")),"video/*"));
+                        } catch (JSONException e) {}
+                    }
+                }).setNegativeButton("播放", new DialogInterface.OnClickListener(){
+
+                    @Override
+                    public void onClick(DialogInterface p1, int p2) {
+                        changeSource(checked_index);
+                    }
+                }).show();
 		}
 		catch (Exception e)
 		{}
@@ -402,6 +427,16 @@ private void scale(){
 				((SeekBar)control.findViewById(R.id.progress)).setProgress(mMediaPlayer.getCurrentPosition());
 				mHandler.sendEmptyMessageDelayed(1, 1000);
 				break;
+            case 2:
+                if (control.getVisibility() == View.VISIBLE)
+                    hide();
+                else
+                    show();
+                break;
+            case 3:
+                playorpause();
+                break;
+                
 		}
 		return true;
 	}
