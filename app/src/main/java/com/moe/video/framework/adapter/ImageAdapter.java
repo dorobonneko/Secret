@@ -25,7 +25,9 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
         bounds.right=size;
         bounds.bottom=size;
     }
-
+    public NativeObject getObject(int position){
+        return array.get(position);
+    }
     @Override
     public ImageAdapter.ImageViewHolder onCreateViewHolder(ViewGroup p1, int p2) {
         switch (p2) {
@@ -81,7 +83,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
             view = (PhotoView) v;
             switch(type){
                 case 1:
-                view.setAllowParentInterceptOnEdge(true);
+                view.setAllowParentInterceptOnEdge(false);
                 view.setLayoutParams(new ViewGroup.LayoutParams(-1,-1));
                 view.setScaleType(ImageView.ScaleType.FIT_CENTER);
                 break;

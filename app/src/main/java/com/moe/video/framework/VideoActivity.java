@@ -44,6 +44,8 @@ import android.provider.Settings;
 import android.provider.Settings.SettingNotFoundException;
 import android.widget.Toast;
 import android.net.Uri;
+import android.support.v4.view.ViewConfigurationCompat;
+import android.view.ViewConfiguration;
 
 public class VideoActivity extends Activity implements TextureView.SurfaceTextureListener,MediaPlayer.OnPreparedListener,MediaPlayer.OnInfoListener,Handler.Callback,OnTouchListener,OnClickListener,SeekBar.OnSeekBarChangeListener,MediaPlayer.OnVideoSizeChangedListener,MediaPlayer.OnErrorListener,MediaPlayer.OnCompletionListener
 {
@@ -239,6 +241,8 @@ public class VideoActivity extends Activity implements TextureView.SurfaceTextur
 				scrollState=3;
 				break;
 			case p2.ACTION_MOVE:
+                int touchSlop=ViewConfiguration.get(getApplicationContext()).getScaledTouchSlop();
+                if(Math.max(Math.abs(p2.getRawX()-sx),Math.abs(p2.getRawY()-sy))<touchSlop)break;
 				move = true;
 				if (firstMove)
 				{
@@ -290,12 +294,12 @@ public class VideoActivity extends Activity implements TextureView.SurfaceTextur
 				switch (scrollState)
 				{
 					case 0:
-						int distance=(int)((p2.getRawX()-sx)/p1.getWidth()*100000);
+						int distance=(int)((p2.getRawX()-sx)/p1.getWidth()*300000);
 						int position=currentPosition+distance;
 						position=Math.max(Math.min(mMediaPlayer.getDuration(),position),0);
 						((TextView)control.findViewById(R.id.current_time)).setText(getTime(position));
 						((SeekBar)control.findViewById(R.id.progress)).setProgress(position);
-						tips.setText((distance<0?"-":"")+getTime(distance));
+						tips.setText((distance<0?"-":"+")+getTime(distance)+"/"+getTime(position));
 						break;
 					case 1:{
 							WindowManager.LayoutParams params=getWindow().getAttributes();
@@ -375,6 +379,7 @@ public class VideoActivity extends Activity implements TextureView.SurfaceTextur
 	@Override
 	public void onClick(View p1)
 	{
+        show();
 		switch (p1.getId())
 		{
 			case R.id.source:
@@ -382,7 +387,7 @@ public class VideoActivity extends Activity implements TextureView.SurfaceTextur
 				break;
 			case R.id.playorpause:
 				playorpause();
-				show();
+				//show();
 				break;
 			case R.id.pip:
 				enterPIP();
@@ -586,7 +591,7 @@ private void scale(){
 	{
 		control.setVisibility(View.VISIBLE);
 		mHandler.removeMessages(0);
-		mHandler.sendEmptyMessageDelayed(0, 3000);
+		mHandler.sendEmptyMessageDelayed(0, 5000);
 	}
 	private void hide()
 	{

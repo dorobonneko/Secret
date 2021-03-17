@@ -12,6 +12,7 @@
 		android:id="@+id/title"
 		android:textSize="16sp"
 		android:layout_weight="1"
+        android:textColor="#ff301070"
 		android:singleLine="true"/>
 	<TextView
 		android:text="More"

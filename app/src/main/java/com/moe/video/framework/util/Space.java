@@ -8,6 +8,7 @@ import android.util.TypedValue;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.view.ViewGroup;
 import android.graphics.Canvas;
+import android.support.v7.widget.GridLayoutManager;
 
 public class Space extends RecyclerView.ItemDecoration
 {
@@ -24,7 +25,37 @@ public class Space extends RecyclerView.ItemDecoration
         if(position==-1)return;
 		switch(parent.getAdapter().getItemViewType(position)){
 			case 2:
-                outRect.set(size,size,size,size);
+                GridLayoutManager.LayoutParams param=(GridLayoutManager.LayoutParams) view.getLayoutParams();
+            switch(param.getSpanSize()){
+                    case 6:
+                        outRect.set(size,0,size,size);
+                        break;
+                    case 3:
+                        switch(param.getSpanIndex()){
+                            case 0:
+                                outRect.set(size,0,size/2,size);
+                                break;
+                            case 3:
+                                outRect.set(size/2,0,size,size);
+                                break;
+                        }
+                        break;
+                    case 2:
+                        switch(param.getSpanIndex()){
+                            case 0:
+                                outRect.set(size,0,size/2,size);
+                                break;
+                            case 2:
+                                outRect.set((int)Math.floor(size/4f*3),0,(int)Math.floor(size/4f*3),size);
+                                break;
+                            case 4:
+                                outRect.set(size/2,0,size,size);
+                                break;
+                        }
+                        break;
+                }
+                
+                
                 break;
             case 7:
                 

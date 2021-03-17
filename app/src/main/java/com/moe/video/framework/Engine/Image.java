@@ -8,7 +8,11 @@ public class Image {
     public void moebooru(int id,String key){
         call.moebooru(id,key);
     }
+    public void picture(int id,String key){
+        call.picture(id,key);
+    }
     public static interface Callback extends Runtime.Callback{
         void moebooru(int id,String key);
+        void picture(int id,String key);
     }
 }

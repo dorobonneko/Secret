@@ -17,12 +17,22 @@ import com.moe.neko.R;
 import org.mozilla.javascript.NativeObject;
 import java.util.List;
 import com.moe.video.framework.util.StaticData;
+import android.widget.Toolbar;
+import android.view.View.OnApplyWindowInsetsListener;
+import android.view.WindowInsets;
+import android.widget.ActionMenuView.OnMenuItemClickListener;
+import android.view.MenuItem;
+import org.mozilla.javascript.ScriptRuntime;
+import android.content.Intent;
+import android.net.Uri;
+import android.text.TextUtils;
 
-public class PhotoViewFragment extends Fragment {
+public class PhotoViewFragment extends Fragment implements View.OnApplyWindowInsetsListener,Toolbar.OnMenuItemClickListener{
     private RecyclerView mRecyclerView;
     private ImageAdapter adapter;
     private SwipeRefreshLayout refresh;
-
+    private PagerSnapHelper mPagerSnapHelper;
+    private String type,key;
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
@@ -50,24 +60,66 @@ public class PhotoViewFragment extends Fragment {
         view.setBackgroundColor(0xff000000);
         mRecyclerView=view.findViewById(R.id.recyclerview);
         refresh=view.findViewById(R.id.refresh);
-        
+        Toolbar toolbar=view.findViewById(R.id.toolbar);
+        getActivity().getMenuInflater().inflate(R.menu.photo,toolbar.getMenu());
+        //toolbar.setTheme(android.R.style.ThemeOverlay_Material);
+        View v=(View) toolbar.getParent();
+        v.setOnApplyWindowInsetsListener(this);
+        v.setFitsSystemWindows(true);
+        v.requestApplyInsets();
+        toolbar.setOnMenuItemClickListener(this);
     }
+
+    @Override
+    public WindowInsets onApplyWindowInsets(View p1, WindowInsets p2) {
+        p1.setPadding(0,p2.getSystemWindowInsetTop(),0,0);
+        return p2;
+    }
+
+    @Override
+    public boolean onMenuItemClick(MenuItem p1) {
+        switch(p1.getItemId()){
+            case R.id.download:
+                int position=mRecyclerView.getChildAdapterPosition(mPagerSnapHelper.findSnapView(mRecyclerView.getLayoutManager()));
+                if(position==-1)break;
+                NativeObject obj=adapter.getObject(position);
+                switch(type){
+                    case "moebooru":{
+                        String url=ScriptRuntime.toString(obj.get("file_url"));
+                        startActivity(new Intent(Intent.ACTION_VIEW).setDataAndType(Uri.parse(url),"image/*"));
+                        }break;
+                    case "picture":
+                        String url=ScriptRuntime.toString(obj.get(key));
+                        if(!TextUtils.isEmpty(url))
+                        startActivity(new Intent(Intent.ACTION_VIEW).setDataAndType(Uri.parse(url),"image/*"));
+                        
+                        break;
+                }
+                break;
+        }
+        return true;
+    }
+
+
     
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
          Bundle bundle=getArguments();
+         this.key=bundle.getString("key","thumb");
          String key=bundle.getString("id");
-         switch(bundle.getString("type")){
+         type=bundle.getString("type");
+         switch(type){
                 case "comic":
                     mRecyclerView.setLayoutManager(new LinearLayoutManager(getContext(),LinearLayoutManager.VERTICAL,false));
                     break;
+                case "picture":
                 case "moebooru":
                  refresh.setEnabled(false);
                  
                     mRecyclerView.setLayoutManager(new LinearLayoutManager(getContext(),LinearLayoutManager.HORIZONTAL,false));
-                    PagerSnapHelper psh=new PagerSnapHelper();
-                    psh.attachToRecyclerView(mRecyclerView);
+                    mPagerSnapHelper=new PagerSnapHelper();
+                    mPagerSnapHelper.attachToRecyclerView(mRecyclerView);
                  mRecyclerView.setAdapter(adapter=new ImageAdapter((List<NativeObject>)StaticData.delete(key),bundle.getString("key","thumb")));
                  mRecyclerView.scrollToPosition(findPosition(key));
                 break;

@@ -113,7 +113,21 @@ public class AppBrandFragment extends Fragment implements Image.Callback,Window.
          pvf.setArguments(bundle);
         getFragmentManager().beginTransaction().add(android.R.id.content, pvf).addToBackStack(null).commitAllowingStateLoss();
         
-        }
+    }
+
+    @Override
+    public void picture(int id, String key) {
+        Bundle bundle=new Bundle();
+        bundle.putString("type","picture");
+        bundle.putString("id",id+"");
+        bundle.putString("key",key);
+        StaticData.put(id+"",new ArrayList<NativeObject>(data));
+        PhotoViewFragment pvf=new PhotoViewFragment();
+        pvf.setArguments(bundle);
+        getFragmentManager().beginTransaction().add(android.R.id.content, pvf).addToBackStack(null).commitAllowingStateLoss();
+        
+    }
+
 
 
 
@@ -247,6 +261,7 @@ public class AppBrandFragment extends Fragment implements Image.Callback,Window.
 		refresh.setOnRefreshListener(this);
 		mRecyclerView = view.findViewById(R.id.recyclerview);
         mRecyclerView.setClipToPadding(false);
+        mRecyclerView.setFitsSystemWindows(true);
         mRecyclerView.setOnApplyWindowInsetsListener(this);
         mRecyclerView.requestApplyInsets();
         //((DefaultItemAnimator)mRecyclerView.getItemAnimator()).setSupportsChangeAnimations(false);
