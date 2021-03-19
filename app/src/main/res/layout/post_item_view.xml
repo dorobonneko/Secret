@@ -32,11 +32,11 @@
 				android:singleLine="true"
 				android:shadowRadius="10"
 				android:shadowColor="?android:attr/colorAccent"
-				android:textSize="12sp"
+				android:textSize="10sp"
 				android:textColor="#ffffffff"/>
 
 			<TextView
-				android:textSize="12sp"
+				android:textSize="10sp"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
 				android:id="@+id/score"
@@ -48,7 +48,7 @@
 
 		</FrameLayout>
 		<TextView
-			android:textSize="14sp"
+			android:textSize="12sp"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:gravity="start"

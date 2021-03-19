@@ -58,8 +58,15 @@ import com.moe.video.framework.VideoActivity;
 import android.provider.Settings;
 import android.net.Uri;
 import com.moe.video.framework.util.StaticData;
-import com.moe.video.framework.Engine.Image;
-public class AppBrandFragment extends Fragment implements Image.Callback,Window.Callback,SwipeRefreshLayout.OnRefreshListener,View.OnApplyWindowInsetsListener {
+import android.support.v7.widget.SnapHelper;
+import android.support.v7.widget.PagerSnapHelper;
+import com.moe.video.framework.util.ScriptUtil;
+import java.util.function.Consumer;
+import org.mozilla.javascript.NativeJavaArray;
+import org.mozilla.javascript.NativeString;
+import org.mozilla.javascript.NativeJavaObject;
+import java.util.function.Predicate;
+public class AppBrandFragment extends Fragment implements Window.Callback,SwipeRefreshLayout.OnRefreshListener,View.OnApplyWindowInsetsListener {
 	private Packet mPacket;
 	private Engine mEngine;
 	private SwipeRefreshLayout refresh;
@@ -68,7 +75,97 @@ public class AppBrandFragment extends Fragment implements Image.Callback,Window.
 	private int page=1;
 	private boolean canLoadMore=true;
 	private List<NativeObject> data;
-    private String video;
+    private String video,layout;
+    private Object arg;
+    private NativeObject exports;
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        setLight(true);
+        if(exports==null)return;
+        Function fun=(Function) exports.get("onload");
+        if(fun!=null){
+            Context context=Context.enter();
+            fun.call(context,fun,fun,new Object[]{arg});
+            context.exit();
+        }
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if(exports==null)return;
+        Function fun=(Function) exports.get("onclose");
+        if(fun!=null){
+            Context context=Context.enter();
+            fun.call(context,fun,fun,new Object[]{arg});
+            context.exit();
+        }
+    }
+
+ 
+    
+    @Override
+    public void setLight(boolean light) {
+        View v=getActivity().getWindow().getDecorView();
+        v.setSystemUiVisibility(light?View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR:0);
+    }
+
+
+    
+    @Override
+    public NativeObject getFocus() {
+        View v=mRecyclerView.getLayoutManager().getChildAt(0);
+        return data.get(mRecyclerView.getChildAdapterPosition(v));
+    }
+
+
+    @Override
+    public boolean canLoadMore() {
+        return canLoadMore;
+    }
+
+    @Override
+    public void download(String url, String type) {
+        startActivity(new Intent(Intent.ACTION_VIEW).setDataAndType(Uri.parse(url),type));
+    }
+
+    
+
+    @Override
+    public void scrollTo(final int id) {
+        data.stream().anyMatch(new Predicate<NativeObject>(){
+
+                @Override
+                public boolean test(NativeObject p1) {
+                    boolean flag=ScriptRuntime.toInt32(p1.get("id"))==id;
+                    if(flag)
+                    mRecyclerView.scrollToPosition(data.indexOf(p1));
+                    return flag;
+                }
+            });
+        
+    }
+
+    
+    @Override
+    public List<NativeObject> getList() {
+        return data;
+    }
+
+    @Override
+    public int getPage() {
+        return page;
+    }
+
+    @Override
+    public Object getArg() {
+        return arg;
+    }
+
+
+    
     @Override
     public Packet getPacket() {
         return mPacket;
@@ -80,7 +177,7 @@ public class AppBrandFragment extends Fragment implements Image.Callback,Window.
     }
 
     @Override
-    public void playVideo(String json) {
+    public void openVideo(String json) {
         if(Settings.canDrawOverlays(getContext())){
             startActivity(new Intent(getContext(),VideoActivity.class).putExtra("data",json));
         }else{
@@ -102,40 +199,35 @@ public class AppBrandFragment extends Fragment implements Image.Callback,Window.
         }
     }
 
-    @Override
-    public void moebooru(int id,String key) {
-        Bundle bundle=new Bundle();
-        bundle.putString("type","moebooru");
-        bundle.putString("id",id+"");
-        bundle.putString("key",key);
-        StaticData.put(id+"",new ArrayList<NativeObject>(data));
-         PhotoViewFragment pvf=new PhotoViewFragment();
-         pvf.setArguments(bundle);
-        getFragmentManager().beginTransaction().add(android.R.id.content, pvf).addToBackStack(null).commitAllowingStateLoss();
-        
-    }
+    
 
     @Override
-    public void picture(int id, String key) {
-        Bundle bundle=new Bundle();
-        bundle.putString("type","picture");
-        bundle.putString("id",id+"");
-        bundle.putString("key",key);
-        StaticData.put(id+"",new ArrayList<NativeObject>(data));
-        PhotoViewFragment pvf=new PhotoViewFragment();
-        pvf.setArguments(bundle);
-        getFragmentManager().beginTransaction().add(android.R.id.content, pvf).addToBackStack(null).commitAllowingStateLoss();
-        
-    }
-
-
-
-
-
-
-    @Override
-    public void open(Bundle bundle) {
+    public void openImage(String name, NativeObject arg) {
         AppBrandFragment abf=new AppBrandFragment();
+        Bundle bundle=new Bundle();
+        String key=StaticData.uid();
+        StaticData.put(key,arg);
+        bundle.putString("key",key);
+        bundle.putString("exe",name.concat(".js"));
+        abf.setArguments(bundle);
+        getFragmentManager().beginTransaction().add(android.R.id.content, abf).addToBackStack(null).commitAllowingStateLoss();
+        
+    }
+
+
+
+
+
+
+
+    @Override
+    public void open(String name,NativeObject arg) {
+        AppBrandFragment abf=new AppBrandFragment();
+        Bundle bundle=new Bundle();
+        String key=StaticData.uid();
+        StaticData.put(key,arg);
+        bundle.putString("key",key);
+        bundle.putString("exe",name.concat(".js"));
         abf.setArguments(bundle);
         getFragmentManager().beginTransaction().add(android.R.id.content, abf).addToBackStack(null).commitAllowingStateLoss();
 
@@ -161,10 +253,19 @@ public class AppBrandFragment extends Fragment implements Image.Callback,Window.
 		mPacket = ((ModelActivity)activity).getPacket();
 		mEngine = new Engine(this);
 		Bundle mBundle= getArguments();
-		String exe=mBundle.getString("exe");
+        arg=StaticData.delete(mBundle.getString("key",null));
+        data=new ArrayList<>();
+        if(arg instanceof NativeObject){
+            NativeObject args=(NativeObject) arg;
+            page=ScriptRuntime.toInt32(args.getOrDefault("nextPage",1));
+            canLoadMore=ScriptRuntime.toBoolean(args.getOrDefault("canLoadMore",true));
+            Object items=args.get("items");
+            if(items!=null)
+            data.addAll((List<NativeObject>) items);
+        }
 		try {
             //mEngine.eval(new InputStreamReader(mPacket.getFile("fun.js")));
-			mEngine.eval(new InputStreamReader(mPacket.getFile(exe)));
+			exports=(NativeObject) mEngine.eval(new InputStreamReader(mPacket.getFile(mBundle.getString("exe"))));
         } catch (Exception e) {
 			new AlertDialog.Builder(getContext()).setMessage(e.toString()).show();
         }
@@ -187,6 +288,12 @@ public class AppBrandFragment extends Fragment implements Image.Callback,Window.
         final View toolbar=getView().findViewById(R.id.toolbar);
         View view=(View) toolbar.getParent();
         view.setPadding(p2.getSystemWindowInsetLeft(), p2.getSystemWindowInsetTop(), p2.getSystemWindowInsetRight(), p2.getSystemWindowInsetBottom());
+        try {
+            switch(ScriptRuntime.toString(mEngine.eval("module.layout"))){
+                case "gallery":
+                    return p2;
+            }
+        } catch (ScriptException e) {}
         toolbar.post(new Runnable(){
 
                 @Override
@@ -199,25 +306,40 @@ public class AppBrandFragment extends Fragment implements Image.Callback,Window.
 		return p2;
 	}
 
-
+    @Override
 	public void reload() {
 		try {
-			NativeObject toolbar_json=(NativeObject) mEngine.eval("module.exports.toolbar(" + getArguments().getString("args", "undefined") + ")");
+            try {
+                mRecyclerView.setBackgroundColor(Color.parseColor(ScriptRuntime.toString(mEngine.eval("module.bgColor"))));
+            } catch (Exception e) {}
+            try {
+                layout = ScriptRuntime.toString(mEngine.eval("module.layout"));
+            } catch (ScriptException e) {
+                layout="grid";
+            }
+            initLayout(layout);
+            if(!layout.equals("gallery"))
+                refresh();
+            Function toolbar=(Function) exports.get("toolbar");
+            if(toolbar==null){
+                return;}
+            Context context=Context.enter();
+            final NativeObject toolbar_json=(NativeObject) toolbar.call(context,toolbar,toolbar,new Object[]{arg});
+            context.exit();
 			if (toolbar_json == null)return;
-			Toolbar toolbar=getView().findViewById(R.id.toolbar);
-			toolbar.getMenu().clear();
-			Object tit=toolbar_json.get("title");
-			toolbar.setTitle(tit == null ?null: ScriptRuntime.toString(tit));
-			NativeArray menu=(NativeArray) toolbar_json.get("menu");
-			if (menu != null)
-				for (int i=0;i < menu.size();i++) {
-					final NativeObject menuitem=(NativeObject) menu.get(i);
-					Menu m=toolbar.getMenu();
-					final Object id=menuitem.get("id");
-					Object title=menuitem.get("title");
-					MenuItem item=m.add(0, id == null ?0: id.toString().hashCode(), 0, title == null ?null: title.toString());
-					item.setTitleCondensed(title == null ?"": title.toString());
-                    Object icon=menuitem.get("icon");
+			Toolbar toolbar_view=getView().findViewById(R.id.toolbar);
+			final Menu menu=toolbar_view.getMenu();
+            menu.clear();
+			toolbar_view.setTitle(ScriptUtil.toString(toolbar_json.getOrDefault("title",null)));
+            toolbar_view.setSubtitle(ScriptUtil.toString(toolbar_json.getOrDefault("subTitle",null)));
+            
+			NativeArray menu_items=(NativeArray) toolbar_json.get("menu");
+			if (menu_items != null)
+				for (int i=0;i < menu_items.size();i++) {
+					final NativeObject menuitem=(NativeObject) menu_items.get(i);
+					
+					MenuItem item=menu.add(0,i,i,ScriptRuntime.toString(menuitem.get("title")));
+					Object icon=menuitem.get("icon");
 					if (icon != null) {
 						InputStream input=mPacket.getFile(icon.toString());
 						Drawable d=new PictureDrawable(SVG.getFromInputStream(input).renderToPicture());
@@ -236,21 +358,23 @@ public class AppBrandFragment extends Fragment implements Image.Callback,Window.
 								try {
 									Function fun=(Function) menuitem.get("click");
                                     Context c=Context.enter();
-                                    fun.call(c, menuitem, menuitem, new Object[]{mEngine.getRuntime().window.getMenu().find(id == null ?null: id.toString())});
+                                    fun.call(c, fun, fun, new Object[]{new Window.Menu.MenuItem(AppBrandFragment.this,menu,p1)});
                                     c.exit();
-								} catch (Exception e) {}
+								} catch (Exception e) {
+                                    Toast.makeText(getContext(),e.toString(),Toast.LENGTH_LONG).show();
+                                }
 								return true;
 							}
 						});
 				}
-		} catch (ScriptException s) {} catch (Exception e) {
+		}
+        catch (Exception e) {
 			mEngine.getRuntime().toast(e.getMessage());
 		}
-		refresh();
-	}
+        	}
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-
+        
 		return inflater.inflate(R.layout.appbrand_view, container, false);
 	}
 
@@ -267,33 +391,15 @@ public class AppBrandFragment extends Fragment implements Image.Callback,Window.
         //((DefaultItemAnimator)mRecyclerView.getItemAnimator()).setSupportsChangeAnimations(false);
 		mRecyclerView.addItemDecoration(new Space(getContext()));
         
-		mRecyclerView.setAdapter(pa = new PostAdapter(data = new ArrayList(),mRecyclerView));
+		mRecyclerView.setAdapter(pa = new PostAdapter(data==null?data = new ArrayList<NativeObject>():data,mRecyclerView));
 		mRecyclerView.addOnScrollListener(new Scroll());
-        try {
-            mRecyclerView.setBackgroundColor(Color.parseColor(ScriptRuntime.toString(mEngine.eval("module.bgColor"))));
-        } catch (Exception e) {}
-        try {
-            initLayout(ScriptRuntime.toString(mEngine.eval("module.layout")));
-        } catch (Exception e) {
-            initLayout("grid");
-        }
+        
+        
 		reload();
 
 	}
 
-	@Override
-	public void onActivityCreated(Bundle savedInstanceState) {
-		// TODO: Implement this method
-		super.onActivityCreated(savedInstanceState);
-
-
-	}
-
-	@Override
-	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-		super.onCreateOptionsMenu(menu, inflater);
-	}
-
+	
 	@Override
 	public void onRefresh() {
 		page = 1;
@@ -304,8 +410,12 @@ public class AppBrandFragment extends Fragment implements Image.Callback,Window.
 		new Thread(){
 			public void run() {
 				try {
-					final NativeObject data=(NativeObject) mEngine.eval("module.exports.fetch(" + getArguments().getString("args", "undefined") + "," + page + ");");
-					final NativeArray items=(NativeArray) data.get("items");
+                    Function fetch=(Function) exports.get("fetch");
+                    Context context=Context.enter();
+                    final NativeObject data=(NativeObject) fetch.call(context,fetch,fetch,new Object[]{arg,page});
+                    context.exit();
+					//final NativeObject data=(NativeObject)((Function)exports.get("fetch")).,arg,page);
+					final List items=(List) data.get("items");
 					getActivity().runOnUiThread(new Runnable(){
 
 							@Override
@@ -350,7 +460,13 @@ public class AppBrandFragment extends Fragment implements Image.Callback,Window.
 	}
     private void initLayout(String layout) {
         switch (layout) {
-
+            case "gallery":
+                refresh.setEnabled(false);
+                SnapHelper snapHelper=new PagerSnapHelper();
+                mRecyclerView.setLayoutManager(new LinearLayoutManager(getContext(),LinearLayoutManager.HORIZONTAL,false));
+                snapHelper.attachToRecyclerView(mRecyclerView);
+                mRecyclerView.getLayoutManager().setAutoMeasureEnabled(true);
+                break;
             case "waterflow":
                 //瀑布流
                 mRecyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
@@ -386,7 +502,8 @@ public class AppBrandFragment extends Fragment implements Image.Callback,Window.
 
 		@Override
 		public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-			if (dy > 0 && !refresh.isRefreshing() && canLoadMore) {
+            if(!refresh.isRefreshing() && canLoadMore){
+			if (dy > 0 ) {
                 RecyclerView.LayoutManager lm= recyclerView.getLayoutManager();
                 if (lm instanceof GridLayoutManager) {
                     GridLayoutManager gld=(GridLayoutManager)lm;
@@ -400,8 +517,15 @@ public class AppBrandFragment extends Fragment implements Image.Callback,Window.
                     if (positions[0] >= recyclerView.getAdapter().getItemCount() - sglm.getSpanCount() * 2)
                         loadMore();
                 }
+            }else if(dx>0){
+                RecyclerView.LayoutManager lm=recyclerView.getLayoutManager();
+                 if(lm instanceof LinearLayoutManager){
+                    LinearLayoutManager llm=(LinearLayoutManager) lm;
+                    if(llm.findLastVisibleItemPosition()>llm.getItemCount()-3)
+                        loadMore();
+                }
             }
-
+            }
 		}
 
         @Override
@@ -416,5 +540,4 @@ public class AppBrandFragment extends Fragment implements Image.Callback,Window.
         
 
 	}
-
 }

@@ -2,15 +2,17 @@ package com.moe.video.framework.Engine;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.PictureDrawable;
-import com.caverock.androidsvg.SVG;
-import com.moe.video.framework.activity.ModelActivity;
-import com.moe.video.framework.activity.fragment.AppBrandFragment;
-import com.moe.video.framework.pkg.Packet;
-import java.io.InputStream;
-import org.mozilla.javascript.Function;
-import java.io.IOException;
-import com.caverock.androidsvg.SVGParseException;
 import android.os.Bundle;
+import com.caverock.androidsvg.SVG;
+import com.caverock.androidsvg.SVGParseException;
+import com.moe.video.framework.pkg.Packet;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+import org.mozilla.javascript.Function;
+import org.mozilla.javascript.NativeObject;
+import org.mozilla.javascript.json.JsonParser;
+import org.mozilla.javascript.NativeJSON;
 
 public class Window
 {
@@ -18,8 +20,26 @@ public class Window
 	public Window(Window.Callback f){
 		this.callback=f;
 	}
-    public void playVideo(String json){
-        callback.playVideo(json);
+    public NativeObject getFocus(){
+        return callback.getFocus();
+    }
+    public void download(String url,String type){
+        callback.download(url,type);
+    }
+    public boolean canLoadMore(){
+        return callback.canLoadMore();
+    }
+    public int getPage(){
+        return callback.getPage();
+    }
+    public List<NativeObject> getList(){
+        return callback.getList();
+    }
+    public void openVideo(String json){
+        callback.openVideo(json);
+    }
+    public void openVideo(NativeObject video){
+       openVideo(video.toString());
     }
     public Engine getEngine(){
         return callback.getEngine();
@@ -39,12 +59,25 @@ public class Window
 	public void reload(){
 		callback.reload();
 	}
-	public Packet getPackage(){
+	public Packet getPacket(){
 		return callback.getPacket();
 	}
 	public Context getContext(){
 		return callback.getContext();
 	}
+    public void open(String name,NativeObject arg){
+        callback.open(name,arg);        
+        
+    }
+    public void open(String name){
+        callback.open(name,new NativeObject());
+    }
+    public void openImage(String name,NativeObject arg){
+        callback.openImage(name,arg);
+    }
+    public Object getArg(){
+        return callback.getArg();
+    }
 	public void post(final Function run){
 		callback.post(new Runnable(){
 
@@ -58,40 +91,49 @@ public class Window
 				}
 			});
 	}
+    public void scrollTo(int id){
+        callback.scrollTo(id);
+    }
 	public Menu getMenu(){
 		android.view.Menu m=callback.getMenu();
 		if(m!=null)
-		return new Menu(m);
+		return new Menu(callback,m);
 		return null;
 	}
-	public class Menu{
+    public StatusBar getStatusBar(){
+        return new StatusBar(callback);
+    }
+	public static class Menu{
 		android.view.Menu menu;
-		Menu(android.view.Menu menu){
+        Window.Callback call;
+		Menu(Window.Callback call,android.view.Menu menu){
 			this.menu=menu;
+            this.call=call;
 		}
 		public void clear(){
 			menu.clear();
 		}
-		public MenuItem add(String key,String title,Function click){
-			MenuItem item=find(key);
-			if(item==null){
-				item=new MenuItem(menu.add(0,key.hashCode(),0,title));
-			}
-			item.setTitle(title);
+		public MenuItem add(String title,Function click){
+			MenuItem item=new MenuItem(call,menu,menu.add(0,menu.size(),menu.size(),title));
 			item.setClick(click);
 			return item;
 		}
-		public MenuItem find(String key){
-			if(key!=null)
-			return new MenuItem(menu.findItem(key.hashCode()));
-			return null;
+		public MenuItem get(int index){
+	
+			return new MenuItem(call,menu,menu.getItem(index));
+			
 		}
-		public class MenuItem{
+		public static class MenuItem{
 			android.view.MenuItem mMenuItem;
-			MenuItem(android.view.MenuItem item){
+            android.view.Menu menu;
+            Window.Callback call;
+			public MenuItem(Window.Callback call,android.view.Menu menu,android.view.MenuItem item){
 				mMenuItem=item;
+                this.menu=menu;
+                this.call=call;
 			}
 			public void delete(){
+                
 				menu.removeItem(mMenuItem.getItemId());
 			}
 			public void setTitle(String title){
@@ -102,7 +144,7 @@ public class Window
 				mMenuItem.setShowAsActionFlags(show?mMenuItem.SHOW_AS_ACTION_ALWAYS:0);
 			}
 			public void setIcon(String icon){
-				InputStream input=getPackage().getFile(icon);
+				InputStream input=call.getPacket().getFile(icon);
 				try
 				{
 					Drawable d=new PictureDrawable(SVG.getFromInputStream(input).renderToPicture());
@@ -132,7 +174,7 @@ public class Window
 			}
 		}
 	}
-	public static interface Callback extends Runtime.Callback{
+	public static interface Callback extends Runtime.Callback,StatusBar.Callback{
         public Engine getEngine();
         public String getPackageName();
         public void refresh()
@@ -143,7 +185,16 @@ public class Window
         public Context getContext()
         public android.view.Menu getMenu();
         public void post(Runnable run);
-        public void playVideo(String url);
-        public void open(Bundle bundle)
-        }
+        public void openVideo(String url);
+        public void open(String name,NativeObject arg);
+        public void openImage(String name,NativeObject arg);
+        public int getPage();
+        public List<NativeObject> getList();
+        public Object getArg();
+        public void scrollTo(int id);
+        public boolean canLoadMore();
+        public void download(String url,String type);
+        public NativeObject getFocus();
+         }
+        
 }

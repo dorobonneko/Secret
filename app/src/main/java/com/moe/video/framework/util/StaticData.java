@@ -1,6 +1,7 @@
 package com.moe.video.framework.util;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 public class StaticData {
     
@@ -14,5 +15,8 @@ public class StaticData {
     }
     public final static synchronized <O extends Object> O delete(String key){
         return (O)data.remove(key);
+    }
+    public final static String uid(){
+        return UUID.randomUUID().toString();
     }
 }

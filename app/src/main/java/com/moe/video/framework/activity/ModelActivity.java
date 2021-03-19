@@ -50,7 +50,6 @@ public abstract class ModelActivity extends Activity
 						finishAndRemoveTask();
 				}
 			}, new IntentFilter(getPackageName()));
-		getWindow().getDecorView().setSystemUiVisibility(getWindow().getDecorView().getSystemUiVisibility()|View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
 		mPacket=PacketManager.getInstance().getPacket(getIntent().getAction());
 		Bitmap logo=BitmapUtil.DrawableToBitmap(PacketManager.getInstance().loadLogo(mPacket));
 		ActivityManager.TaskDescription task=new ActivityManager.TaskDescription(mPacket.title,logo);

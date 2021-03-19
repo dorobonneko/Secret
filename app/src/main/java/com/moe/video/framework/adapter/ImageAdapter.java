@@ -83,7 +83,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
             view = (PhotoView) v;
             switch(type){
                 case 1:
-                view.setAllowParentInterceptOnEdge(false);
+                view.setAllowParentInterceptOnEdge(true);
                 view.setLayoutParams(new ViewGroup.LayoutParams(-1,-1));
                 view.setScaleType(ImageView.ScaleType.FIT_CENTER);
                 break;

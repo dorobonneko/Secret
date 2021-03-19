@@ -23,14 +23,22 @@ import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.NativeObject;
 import org.mozilla.javascript.ScriptRuntime;
+import uk.co.senab.photoview.PhotoView;
+import android.support.v4.widget.CircularProgressDrawable;
 import android.graphics.Rect;
+import android.content.res.Resources;
 
 public class PostAdapter<T extends PostAdapter.BaseViewholder> extends RecyclerView.Adapter<T> {
 	private List data;
     private RecyclerView mRecyclerView;
+    private Rect bounds=new Rect();
+    
 	public PostAdapter(List data,RecyclerView mRecyclerView) {
 		this.data = data;
         this.mRecyclerView=mRecyclerView;
+        int size=(int) Resources.getSystem().getDisplayMetrics().density*32;
+        bounds.right=size;
+        bounds.bottom=size;
 	}
 	@Override
 	public T onCreateViewHolder(ViewGroup p1, int p2) {
@@ -48,6 +56,9 @@ public class PostAdapter<T extends PostAdapter.BaseViewholder> extends RecyclerV
 				return (T)new IconViewHolder(LayoutInflater.from(p1.getContext()).inflate(R.layout.post_icon_item_view, p1, false));
             case 7:
                 return (T)new ImageViewHolder(new ImageView(p1.getContext()));
+            case 8:
+                return (T)new PictureViewHolder(new PhotoView(p1.getContext()));
+        
 		}
 		return null;
 	}
@@ -96,6 +107,15 @@ public class PostAdapter<T extends PostAdapter.BaseViewholder> extends RecyclerV
            ivh.view.setLayoutParams(params);
            
            Neko.with(ivh.view).load(ScriptRuntime.toString(obj.get("thumb"))).fade(150).placeHolder(new ColorDrawable(randomColor())).into(ivh.view);
+        }else if(p1 instanceof PictureViewHolder){
+            NativeObject item=(NativeObject) data.get(p2);
+            CircularProgressDrawable cpd=new CircularProgressDrawable(p1.itemView.getContext());
+            cpd.setArrowEnabled(false);
+            cpd.setStyle(CircularProgressDrawable.LARGE);
+            cpd.setBounds(bounds);
+            cpd.setColorSchemeColors(new int[]{0xfffa8a9a});
+            Neko.with(p1.itemView).load(ScriptRuntime.toString(item.get(item.getOrDefault("thumb_key","thumb")))).placeHolder(cpd).into(((PictureViewHolder)p1).view);
+            
         }
 	}
     public static int randomColor() {
@@ -124,6 +144,8 @@ public class PostAdapter<T extends PostAdapter.BaseViewholder> extends RecyclerV
 					return 6;
                 case "image":
                     return 7;
+                case "picture":
+                    return 8;
 			}
 		} catch (Exception e) {
 			throw new RuntimeException(e.getMessage());
@@ -228,6 +250,18 @@ public class PostAdapter<T extends PostAdapter.BaseViewholder> extends RecyclerV
             this.view.setScaleType(ScaleType.CENTER_CROP);
             //view.setPadding(10,10,10,10);
             view.setOnClickListener(this);
+        }
+    }
+    public class PictureViewHolder extends BaseViewholder {
+        PhotoView view;
+        PictureViewHolder(View v) {
+            super(v);
+            view = (PhotoView) v;
+             view.setAllowParentInterceptOnEdge(true);
+                    view.setLayoutParams(new ViewGroup.LayoutParams(-1,-1));
+                    view.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                    
+            
         }
     }
 }

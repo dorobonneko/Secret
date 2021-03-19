@@ -53,17 +53,16 @@ public class Runtime {
 	private Runtime.Callback callback;
 	private Handler mHandler;
 	public Window window;
-    public Image image;
     private static SSLSocketFactory ssl;
+    public Base64 Base64=new Base64();
 	public Runtime(Runtime.Callback callback) {
 		this.callback = callback;
 		window = new Window((Window.Callback)callback);
-        image=new Image((Image.Callback)callback);
-		mHandler = new Handler(Looper.getMainLooper());
+        mHandler = new Handler(Looper.getMainLooper());
 	}
   
     public Object exec(String path) throws ScriptException {
-        return window.getEngine().eval(new InputStreamReader(window.getPackage().getFile(path)));
+        return window.getEngine().eval(new InputStreamReader(window.getPacket().getFile(path)));
     }
     public void options(NativeObject obj, final Function callback) {
         final String title=ScriptRuntime.toString(obj.get("title"));
@@ -163,18 +162,13 @@ public class Runtime {
 			}
 		return null;
 	}
-	public void open(String type, String args) {
-		Bundle b=new Bundle();
-        b.putString("exe", type.concat(".js"));
-        b.putString("args", args);
-        ((Window.Callback)callback).open(b);		
-	}
+	
 	public void copy(String text) {
 		ClipboardManager cm=(ClipboardManager) window.getContext().getSystemService(android.content.Context.CLIPBOARD_SERVICE);
 		cm.setText(text);
 	}
 	public void play(String json) {
-		window.playVideo(json);
+		window.openVideo(json);
     }
     public void alert(final String message) {
         mHandler.post(new Runnable(){

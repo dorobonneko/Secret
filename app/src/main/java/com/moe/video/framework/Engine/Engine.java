@@ -41,6 +41,6 @@ public class Engine
 		return engine.eval(reader);
 	}
 	public Object invokeMethod(String name,Object... args) throws NoSuchMethodException, ScriptException{
-		return engine.invokeFunction(name,args);
+		return engine.invokeMethod(engine,name,args);
 	}
 }
