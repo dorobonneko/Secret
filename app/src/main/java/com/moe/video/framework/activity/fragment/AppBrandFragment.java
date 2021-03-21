@@ -66,6 +66,8 @@ import org.mozilla.javascript.NativeJavaArray;
 import org.mozilla.javascript.NativeString;
 import org.mozilla.javascript.NativeJavaObject;
 import java.util.function.Predicate;
+import org.mozilla.javascript.Scriptable;
+import java.io.IOException;
 public class AppBrandFragment extends Fragment implements Window.Callback,SwipeRefreshLayout.OnRefreshListener,View.OnApplyWindowInsetsListener {
 	private Packet mPacket;
 	private Engine mEngine;
@@ -78,7 +80,16 @@ public class AppBrandFragment extends Fragment implements Window.Callback,SwipeR
     private String video,layout;
     private Object arg;
     private NativeObject exports;
+    public String log(){
+        return mEngine.getRuntime().log();
+    }
 
+    @Override
+    public Scriptable getScriptable() {
+        return mEngine.getScriptable();
+    }
+
+    
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
@@ -251,22 +262,22 @@ public class AppBrandFragment extends Fragment implements Window.Callback,SwipeR
 		// TODO: Implement this method
 		super.onAttach(activity);
 		mPacket = ((ModelActivity)activity).getPacket();
-		mEngine = new Engine(this);
-		Bundle mBundle= getArguments();
-        arg=StaticData.delete(mBundle.getString("key",null));
-        data=new ArrayList<>();
-        if(arg instanceof NativeObject){
-            NativeObject args=(NativeObject) arg;
-            page=ScriptRuntime.toInt32(args.getOrDefault("nextPage",1));
-            canLoadMore=ScriptRuntime.toBoolean(args.getOrDefault("canLoadMore",true));
-            Object items=args.get("items");
-            if(items!=null)
-            data.addAll((List<NativeObject>) items);
-        }
 		try {
-            //mEngine.eval(new InputStreamReader(mPacket.getFile("fun.js")));
-			exports=(NativeObject) mEngine.eval(new InputStreamReader(mPacket.getFile(mBundle.getString("exe"))));
-        } catch (Exception e) {
+            mEngine = new Engine(this);
+            Bundle mBundle= getArguments();
+            arg=StaticData.delete(mBundle.getString("key",null));
+            data=new ArrayList<>();
+            if(arg instanceof NativeObject){
+                NativeObject args=(NativeObject) arg;
+                page=ScriptRuntime.toInt32(args.getOrDefault("nextPage",1));
+                canLoadMore=ScriptRuntime.toBoolean(args.getOrDefault("canLoadMore",true));
+                Object items=args.get("items");
+                if(items!=null)
+                    data.addAll((List<NativeObject>) items);
+            }
+            exports=(NativeObject) mEngine.eval(new InputStreamReader(mPacket.getFile(mBundle.getString("exe"))),mBundle.getString("exe"));
+            
+        } catch (IOException e) {
 			new AlertDialog.Builder(getContext()).setMessage(e.toString()).show();
         }
 	}
@@ -288,12 +299,10 @@ public class AppBrandFragment extends Fragment implements Window.Callback,SwipeR
         final View toolbar=getView().findViewById(R.id.toolbar);
         View view=(View) toolbar.getParent();
         view.setPadding(p2.getSystemWindowInsetLeft(), p2.getSystemWindowInsetTop(), p2.getSystemWindowInsetRight(), p2.getSystemWindowInsetBottom());
-        try {
-            switch(ScriptRuntime.toString(mEngine.eval("module.layout"))){
+        switch(ScriptRuntime.toString(mEngine.getOrDefault("layout","grid"))){
                 case "gallery":
                     return p2;
             }
-        } catch (ScriptException e) {}
         toolbar.post(new Runnable(){
 
                 @Override
@@ -310,13 +319,9 @@ public class AppBrandFragment extends Fragment implements Window.Callback,SwipeR
 	public void reload() {
 		try {
             try {
-                mRecyclerView.setBackgroundColor(Color.parseColor(ScriptRuntime.toString(mEngine.eval("module.bgColor"))));
+                mRecyclerView.setBackgroundColor(Color.parseColor(ScriptRuntime.toString(mEngine.getOrDefault("bgColor","#ffffffff"))));
             } catch (Exception e) {}
-            try {
-                layout = ScriptRuntime.toString(mEngine.eval("module.layout"));
-            } catch (ScriptException e) {
-                layout="grid";
-            }
+            layout = ScriptRuntime.toString(mEngine.getOrDefault("layout","grid"));
             initLayout(layout);
             if(!layout.equals("gallery"))
                 refresh();

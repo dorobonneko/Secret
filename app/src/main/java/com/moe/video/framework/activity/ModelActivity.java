@@ -31,6 +31,8 @@ import android.view.Gravity;
 import com.moe.video.framework.R;
 import android.app.AlertDialog;
 import com.moe.neko.Neko;
+import android.app.Fragment;
+import java.util.List;
 
 public abstract class ModelActivity extends Activity
 {
@@ -74,7 +76,9 @@ public abstract class ModelActivity extends Activity
 					@Override
 					public void onClick(View p1)
 					{
-                        new AlertDialog.Builder(p1.getContext()).setMessage(Neko.with(p1).printCacheStatus()).show();
+                        List<Fragment> list=getFragmentManager().getFragments();
+                        AppBrandFragment abf=(AppBrandFragment) list.get(list.size()-1);
+                        new AlertDialog.Builder(p1.getContext()).setMessage(abf.log()).show();
 						//new AlertDialog.Builder(p1.getContext()).setMessage(Pussy.$(p1.getContext()).getActiveResource().size()+"\n"+Pussy.$(p1.getContext()).getActiveResource().toString()).show();
 					}
 				});

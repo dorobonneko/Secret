@@ -12,35 +12,51 @@ import java.io.Reader;
 import org.jsoup.Jsoup;
 import android.app.Fragment;
 import com.moe.video.framework.activity.fragment.AppBrandFragment;
+import org.mozilla.javascript.NativeJavaPackage;
+import java.lang.reflect.InvocationTargetException;
+import org.mozilla.javascript.NativeJavaTopPackage;
+import org.mozilla.javascript.NativeObject;
 
 
 public class Engine
 {
-	private RhinoScriptEngine engine;
-	public Engine(Window.Callback fragment){
-		engine=new RhinoScriptEngine();
-		final Runtime runtime=new Runtime(fragment);
-		engine.put("runtime",runtime);
-		try
-		{
-			//engine.eval(new InputStreamReader(fragment.getContext().getAssets().open("MyPromise.js")));
-			engine.eval(new InputStreamReader(fragment.getContext().getAssets().open("function.js")));
-		}
-		catch (ScriptException e)
-		{}
-		catch (IOException e)
-		{}
+	//private RhinoScriptEngine engine;
+    private Scriptable script;
+    private Context context;
+    public Engine(Window.Callback fragment) throws IOException{
+		//engine=new RhinoScriptEngine();
+        context=Context.enter();
+        context.setOptimizationLevel(-1);
+        script=context.initSafeStandardObjects();
+        NativeJavaTopPackage.init(context,script,false);
+        final Runtime runtime=new Runtime(fragment);
+		script.put("runtime",script,runtime);
+        eval(new InputStreamReader(fragment.getContext().getAssets().open("function.js")), "function.js");
 	}
+    public NativeObject getModule(){
+         return (NativeObject) script.get("module",script);
+        
+    }
+    public <T extends Object> T getOrDefault(String key,String defaultValue){
+        return (T)getModule().getOrDefault(key,defaultValue);
+    }
+    public Scriptable getScriptable() {
+        return script;
+    }
 	public Runtime getRuntime(){
-		return (Runtime)engine.get("runtime");
+		return (Runtime)script.get("runtime",script);
 	}
-	public Object eval(String script) throws ScriptException{
-		return engine.eval(script);
+	public Object eval(String script,String name){
+		Object result=null;
+        result=context.evaluateString(this.script,script, name, 1, null);
+        return result;
 	}
-	public Object eval(Reader reader) throws ScriptException{
-		return engine.eval(reader);
+	public Object eval(Reader reader,String name) throws IOException{
+		Object result=null;
+        result=context.evaluateReader(script, reader, name, 1, null);
+         return result;
 	}
-	public Object invokeMethod(String name,Object... args) throws NoSuchMethodException, ScriptException{
+	/*public Object invokeMethod(String name,Object... args) throws NoSuchMethodException, ScriptException{
 		return engine.invokeMethod(engine,name,args);
-	}
+	}*/
 }

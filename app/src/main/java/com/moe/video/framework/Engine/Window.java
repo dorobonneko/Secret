@@ -1,5 +1,4 @@
 package com.moe.video.framework.Engine;
-import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.PictureDrawable;
 import android.os.Bundle;
@@ -13,6 +12,7 @@ import org.mozilla.javascript.Function;
 import org.mozilla.javascript.NativeObject;
 import org.mozilla.javascript.json.JsonParser;
 import org.mozilla.javascript.NativeJSON;
+import org.mozilla.javascript.Context;
 
 public class Window
 {
@@ -39,7 +39,9 @@ public class Window
         callback.openVideo(json);
     }
     public void openVideo(NativeObject video){
-       openVideo(video.toString());
+        Context context=Context.enter();
+       openVideo(NativeJSON.stringify(context,video,video,null,null).toString());
+       context.exit();
     }
     public Engine getEngine(){
         return callback.getEngine();
@@ -62,7 +64,7 @@ public class Window
 	public Packet getPacket(){
 		return callback.getPacket();
 	}
-	public Context getContext(){
+	public android.content.Context getContext(){
 		return callback.getContext();
 	}
     public void open(String name,NativeObject arg){
@@ -182,7 +184,7 @@ public class Window
         public void close()
         public void reload()
         public Packet getPacket()
-        public Context getContext()
+        public android.content.Context getContext()
         public android.view.Menu getMenu();
         public void post(Runnable run);
         public void openVideo(String url);

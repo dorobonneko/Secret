@@ -6,7 +6,6 @@ import com.sun.script.javascript.RhinoScriptEngine;
 import org.jsoup.Jsoup;
 import org.jsoup.parser.Parser;
 import android.app.Fragment;
-import android.content.Context;
 import com.moe.video.framework.activity.fragment.AppBrandFragment;
 import android.os.Bundle;
 import android.content.ClipboardManager;
@@ -47,6 +46,9 @@ import java.util.TreeMap;
 import android.util.ArrayMap;
 import java.util.LinkedHashMap;
 import javax.script.ScriptException;
+import org.mozilla.javascript.Scriptable;
+import android.app.ProgressDialog;
+import org.mozilla.javascript.Context;
 
 public class Runtime {
 
@@ -55,14 +57,23 @@ public class Runtime {
 	public Window window;
     private static SSLSocketFactory ssl;
     public Base64 Base64=new Base64();
+    private Logcat log=new Logcat();
 	public Runtime(Runtime.Callback callback) {
 		this.callback = callback;
 		window = new Window((Window.Callback)callback);
         mHandler = new Handler(Looper.getMainLooper());
 	}
-  
-    public Object exec(String path) throws ScriptException {
-        return window.getEngine().eval(new InputStreamReader(window.getPacket().getFile(path)));
+    public byte[] getBytes(String str){
+        return str.getBytes();
+    }
+    public void log(String log){
+        this.log.log(log);
+    }
+    public String log(){
+        return this.log.log();
+    }
+    public Object exec(String path) throws IOException {
+        return window.getEngine().eval(new InputStreamReader(window.getPacket().getFile(path)),path);
     }
     public void options(NativeObject obj, final Function callback) {
         final String title=ScriptRuntime.toString(obj.get("title"));
@@ -134,18 +145,16 @@ public class Runtime {
         return ssl;
     }
 	public void toast(final String msg) {
-		final Context context=window.getContext();
-		if (context == null)return;
 		if (Thread.currentThread() != Looper.getMainLooper().getThread()) {
 			mHandler.post(new Runnable(){
 
 					@Override
 					public void run() {
-						Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
+						Toast.makeText(window.getContext(), msg, Toast.LENGTH_SHORT).show();
 					}
 				});
 		} else
-            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
+            Toast.makeText(window.getContext(), msg, Toast.LENGTH_SHORT).show();
 	}
 
 	public byte[] Byte(int size) {
@@ -159,6 +168,8 @@ public class Runtime {
 				return Parser.htmlParser();
 			case "database":
 				return new Database(window.getContext(), window.getPackageName());
+            case "m3u":
+                return new M3u(callback.getScriptable());
 			}
 		return null;
 	}
@@ -240,6 +251,30 @@ public class Runtime {
                 }
 			});
 	}
+    public void _progress(final String title,final Function callback){
+        mHandler.post(new Runnable(){
+
+                @Override
+                public void run() {
+                    ProgressDialog pd=new ProgressDialog(window.getContext());
+                    pd.setTitle(title);
+                    pd.setCancelable(false);
+                    pd.setCanceledOnTouchOutside(false);
+                    pd.show();
+                    Context context=Context.enter();
+                    callback.call(context,callback,callback,new Object[]{pd});
+                    context.exit();
+                }
+            });
+    }
+    public ProgressDialog progressDialog(String title){
+        ProgressDialog pd=new ProgressDialog(window.getContext());
+        pd.setTitle(title);
+        pd.setCancelable(false);
+        pd.setCanceledOnTouchOutside(false);
+        pd.show();
+        return pd;
+    }
 	public String load(String uri) throws Exception {
 		Uri url=Uri.parse(uri);
 		if (url.getScheme() != null)
@@ -259,5 +294,7 @@ public class Runtime {
 		}
         return StringUtil.toString(window.getContext().getContentResolver().openInputStream(Uri.parse(uri)));
 	}
-	public static interface Callback{}
+	public static interface Callback{
+        Scriptable getScriptable();
+    }
 }

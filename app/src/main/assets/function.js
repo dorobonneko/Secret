@@ -10,6 +10,9 @@ for(var fn in runtime) {
 	  this[fn]=runtime[fn];
   }
 }
+function $(arg){
+    
+}
 function array(list){
 	var arr=new Array();
 	for(var i=0;i<list.size();i++)
@@ -28,17 +31,17 @@ function request(opt) {
         opt.headers=opt.headers||{};
        var conn=open(opt.url);
 	   conn.setRequestMethod(opt.method);
-	   for(let header in opt.headers){
+	   for(var header in opt.headers){
 		   conn.setRequestProperty(header,opt.headers[header]);
 	   }
 	   if(opt.data){
-		   let out=conn.getOutputStream();
-		   out.write(opt.data);
+		   var out=conn.getOutputStream();
+           out.write(getBytes(opt.data));
 		   out.flush();
 	   }
-	   let input=conn.getInputStream();
-	   let bytearray=new java.io.ByteArrayOutputStream();
-	   let len=-1;
+	   var input=conn.getInputStream();
+	   var bytearray=new Packages.java.io.ByteArrayOutputStream();
+	   var len=-1;
 	   var array=Byte(2048);
 	   while((len=input.read(array))!=-1){
 		   bytearray.write(array,0,len);
@@ -89,5 +92,12 @@ function confirm(title,msg){
 		_confirm(title,msg,(result)=>{
 			resolve(result);
 		})});
+}
+function progress(title){
+    return new Promise(function(resolve,reject){
+        _progress(title,(result)=>{
+            resolve(result);
+        });
+    });
 }
 //(()=>{toast("aaa")})();

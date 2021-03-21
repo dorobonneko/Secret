@@ -46,6 +46,8 @@ import android.widget.Toast;
 import android.net.Uri;
 import android.support.v4.view.ViewConfigurationCompat;
 import android.view.ViewConfiguration;
+import java.util.HashMap;
+import java.util.Map;
 
 public class VideoActivity extends Activity implements TextureView.SurfaceTextureListener,MediaPlayer.OnPreparedListener,MediaPlayer.OnInfoListener,Handler.Callback,OnTouchListener,OnClickListener,SeekBar.OnSeekBarChangeListener,MediaPlayer.OnVideoSizeChangedListener,MediaPlayer.OnErrorListener,MediaPlayer.OnCompletionListener
 {
@@ -133,7 +135,10 @@ public class VideoActivity extends Activity implements TextureView.SurfaceTextur
 					try
 					{
 						dataSource=item.getString("src");
-						mMediaPlayer.setDataSource(item.getString("src"));
+                        Map<String,String> headers=new HashMap<>();
+                        headers.put("Accept-Encoding","identity");
+                        headers.put("Referer",item.has("referer")?item.getString("referer"):dataSource);
+						mMediaPlayer.setDataSource(getApplicationContext(),Uri.parse(dataSource),headers);
 						mMediaPlayer.prepareAsync();
 						progressView.setVisibility(View.VISIBLE);
 						((ImageView)control.findViewById(R.id.playorpause)).setImageResource(R.drawable.pause);
