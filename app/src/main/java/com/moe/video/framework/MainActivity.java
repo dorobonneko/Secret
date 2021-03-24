@@ -28,8 +28,12 @@ import android.widget.AdapterView.OnItemLongClickListener;
 import android.content.DialogInterface;
 import android.net.Uri;
 import java.net.HttpURLConnection;
+import android.content.SharedPreferences;
+import com.moe.neko.Neko;
+import android.widget.ImageView.ScaleType;
 
-public class MainActivity extends Activity implements FolderDialog.Callback,GridView.OnItemClickListener,GridView.OnItemLongClickListener,PacketManager.OnPacketChangedListener
+public class MainActivity extends Activity implements FolderDialog.Callback,GridView.OnItemClickListener,GridView.OnItemLongClickListener,PacketManager.OnPacketChangedListener,
+SharedPreferences.OnSharedPreferenceChangeListener
 {
 	private GridView mGridView;
 	private AppAdapter mAppAdapter;
@@ -48,7 +52,27 @@ public class MainActivity extends Activity implements FolderDialog.Callback,Grid
 		getWindow().getDecorView().setSystemUiVisibility(getWindow().getDecorView().getSystemUiVisibility()|View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
 		if(checkCallingOrSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)==PackageManager.PERMISSION_DENIED)
 			requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},4676);
-	   }
+        SharedPreferences preferences=getSharedPreferences("setting",MODE_PRIVATE);
+        onSharedPreferenceChanged(preferences,"background");
+        preferences.registerOnSharedPreferenceChangeListener(this);
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences p1, String p2) {
+        switch(p2){
+            case "background":
+                View view=findViewById(android.R.id.content);
+                String background=p1.getString(p2,null);
+                if(background==null)
+                    view.setBackground(null);
+                    else
+                    Neko.with(view).load(background).scaleType(ScaleType.CENTER_CROP).fade(100).into(view);
+                
+                break;
+        }
+    }
+
+       
 	@Override
 	public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults)
 	{
@@ -74,6 +98,9 @@ public class MainActivity extends Activity implements FolderDialog.Callback,Grid
 				fd.setCallback(this);
 				fd.show();
 				break;
+            case R.id.setting:
+                startActivity(new Intent(this,SettingActivity.class));
+                break;
 		}
 		return super.onOptionsItemSelected(item);
 	}

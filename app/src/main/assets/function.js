@@ -10,14 +10,21 @@ for(var fn in runtime) {
 	  this[fn]=runtime[fn];
   }
 }
+function urlEncode(str){
+    return encodeURIComponent(str);
+}
+function urlDecode(str){
+    return decodeURIComponent(str);
+}
 function $(arg){
     
 }
 function array(list){
-	var arr=new Array();
-	for(var i=0;i<list.size();i++)
-	arr.push(list.get(i));
-	return arr;
+    return list.toArray();
+//	var arr=new Array();
+//	for(var i=0;i<list.size();i++)
+//	arr.push(list.get(i));
+//	return arr;
 }
 function async(fun,callback){
 	var run={run:function(){callback(fun());}};

@@ -79,6 +79,9 @@ public class Space extends RecyclerView.ItemDecoration
                     outRect.set(size,size,size,size);
                 }
 				break;
+            case 9:
+                outRect.set(0,size/2,0,size);
+                break;
 			
 		}
 	}

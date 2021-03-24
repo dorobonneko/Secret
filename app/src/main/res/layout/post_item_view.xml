@@ -30,9 +30,9 @@
 				android:layout_height="wrap_content"
 				android:gravity="center"
 				android:singleLine="true"
-				android:shadowRadius="10"
-				android:shadowColor="?android:attr/colorAccent"
-				android:textSize="10sp"
+				android:shadowRadius="5"
+				android:shadowColor="#000"
+				android:textSize="11sp"
 				android:textColor="#ffffffff"/>
 
 			<TextView
@@ -48,13 +48,17 @@
 
 		</FrameLayout>
 		<TextView
-			android:textSize="12sp"
+			android:textSize="13sp"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:gravity="start"
 			android:id="@+id/title"
 			android:minLines="2"
 			android:maxLines="2"
+            android:shadowColor="#fff"
+            android:shadowRadius="3"
+            android:textStyle="bold"
+            android:textColor="#ff200040"
 		/>
 
 	</LinearLayout>

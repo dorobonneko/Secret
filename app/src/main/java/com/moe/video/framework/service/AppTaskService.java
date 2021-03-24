@@ -11,6 +11,7 @@ import com.moe.video.framework.activity.ui.ModelUI2;
 import com.moe.video.framework.activity.ui.ModelUI3;
 import com.moe.video.framework.activity.ui.ModelUI4;
 import java.util.List;
+import android.widget.Toast;
 
 public class AppTaskService extends Service
 {
@@ -54,11 +55,13 @@ public class AppTaskService extends Service
 						if(tasks[i]==null)
 						{
 							startActivity(new Intent(this,getClass(i)).setAction(packageName).setFlags(intent.FLAG_ACTIVITY_NEW_TASK));
-							break;
+							break out;
 						}
 					}
 				
-				}break;
+				}
+                Toast.makeText(this,"任务到达上限！！！",Toast.LENGTH_LONG).show();
+                break;
 			case ActivityTask.STOP:
 				String packageName=intent.getStringExtra(intent.EXTRA_PACKAGE_NAME);
 				for(ActivityTask.TaskDesc td:tasks){

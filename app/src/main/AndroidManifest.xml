@@ -89,7 +89,9 @@
             android:taskAffinity=".ModelUI4"
             android:process=":modelui4"
             android:name=".activity.ui.ModelUI4"/>
-
+        <activity
+            android:name=".SettingActivity"
+            android:theme="@style/SettingTheme"/>
     </application>
 
 </manifest>

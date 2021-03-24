@@ -49,7 +49,7 @@ import android.view.ViewConfiguration;
 import java.util.HashMap;
 import java.util.Map;
 
-public class VideoActivity extends Activity implements TextureView.SurfaceTextureListener,MediaPlayer.OnPreparedListener,MediaPlayer.OnInfoListener,Handler.Callback,OnTouchListener,OnClickListener,SeekBar.OnSeekBarChangeListener,MediaPlayer.OnVideoSizeChangedListener,MediaPlayer.OnErrorListener,MediaPlayer.OnCompletionListener
+public class VideoActivity extends Activity implements TextureView.SurfaceTextureListener,MediaPlayer.OnPreparedListener,MediaPlayer.OnInfoListener,Handler.Callback,OnTouchListener,OnClickListener,SeekBar.OnSeekBarChangeListener,MediaPlayer.OnVideoSizeChangedListener,MediaPlayer.OnErrorListener,MediaPlayer.OnCompletionListener,MediaPlayer.OnBufferingUpdateListener
 {
 
 	private View control,progressView;
@@ -62,7 +62,7 @@ public class VideoActivity extends Activity implements TextureView.SurfaceTextur
 	private TextureView mTextureView;
 	private float sx,sy;
 	private int scrollState,preSeek;
-	private TextView tips;
+	private TextView tips,title;
 	private AudioManager audio;
 	private int scaleType,index;
 	private String dataSource;
@@ -85,6 +85,7 @@ public class VideoActivity extends Activity implements TextureView.SurfaceTextur
 		mMediaPlayer.setOnVideoSizeChangedListener(this);
 		mMediaPlayer.setOnErrorListener(this);
 		mMediaPlayer.setOnCompletionListener(this);
+        mMediaPlayer.setOnBufferingUpdateListener(this);
 		control = findViewById(R.id.control);
 		control.findViewById(R.id.source).setOnClickListener(this);
 		control.findViewById(R.id.playorpause).setOnClickListener(this);
@@ -94,6 +95,7 @@ public class VideoActivity extends Activity implements TextureView.SurfaceTextur
 		progressView = control.findViewById(R.id.loadingprogress);
 		SeekBar seekbar=control.findViewById(R.id.progress);
 		tips = findViewById(R.id.tips);
+        title=findViewById(R.id.title);
 		seekbar.setOnSeekBarChangeListener(this);
 		mTextureView = findViewById(R.id.textureview);
 		mTextureView.setSurfaceTextureListener(this);
@@ -108,6 +110,7 @@ public class VideoActivity extends Activity implements TextureView.SurfaceTextur
 		try
 		{
 			data = new JSONObject(intent.getStringExtra("data"));
+            title.setText(data.getString("title"));
 			preSeek=0;
 			changeSource(0);
 		}
@@ -155,6 +158,12 @@ public class VideoActivity extends Activity implements TextureView.SurfaceTextur
 			{}
 	}
 
+    @Override
+    public void onBufferingUpdate(MediaPlayer p1, int p2) {
+        ((SeekBar)control.findViewById(R.id.progress)).setSecondaryProgress(p2);
+    }
+
+
 	@Override
 	public void onPrepared(MediaPlayer p1)
 	{
@@ -198,6 +207,7 @@ public class VideoActivity extends Activity implements TextureView.SurfaceTextur
 	public void onCompletion(MediaPlayer p1)
 	{
 		pause();
+        show();
 	}
 
 	private void pause(){

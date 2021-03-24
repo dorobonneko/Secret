@@ -33,17 +33,26 @@ import android.app.AlertDialog;
 import com.moe.neko.Neko;
 import android.app.Fragment;
 import java.util.List;
+import android.content.SharedPreferences;
+import android.widget.ImageView.ScaleType;
+import android.app.FragmentManager;
 
-public abstract class ModelActivity extends Activity
+public abstract class ModelActivity extends Activity implements SharedPreferences.OnSharedPreferenceChangeListener
 {
 	private Packet mPacket;
-	private String data;
+    private FragmentLifecycle fl=new FragmentLifecycle();
+    private ViewGroup view;
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
 		
 		super.onCreate(savedInstanceState);
-		registerReceiver(new BroadcastReceiver(){
+        view=findViewById(android.R.id.content);
+        SharedPreferences preferences=getSharedPreferences("setting",MODE_PRIVATE);
+        preferences.registerOnSharedPreferenceChangeListener(this);
+		onSharedPreferenceChanged(preferences,"background");
+        getFragmentManager().registerFragmentLifecycleCallbacks(fl,false);
+        registerReceiver(new BroadcastReceiver(){
 
 				@Override
 				public void onReceive(Context p1, Intent p2)
@@ -66,7 +75,7 @@ public abstract class ModelActivity extends Activity
 		Bundle mBundle=new Bundle();
 		mBundle.putString("exe",mPacket.exe);
 		abf.setArguments(mBundle);
-		getFragmentManager().beginTransaction().add(android.R.id.content,abf).addToBackStack(null).commit();
+        getFragmentManager().beginTransaction().add(android.R.id.content,abf).addToBackStack(null).commit();
 		ViewGroup vg=(ViewGroup) getWindow().getDecorView();
 		ImageView debug=null;
 		vg.addView(debug=new ImageView(this),new FrameLayout.LayoutParams(-2,-2,Gravity.BOTTOM|Gravity.END));
@@ -85,7 +94,21 @@ public abstract class ModelActivity extends Activity
 		}
 	}
 
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences p1, String p2) {
+        switch(p2){
+            case "background":
+                String background=p1.getString(p2,null);
+                if(background==null)
+                    view.setBackground(null);
+                else
+                    Neko.with(view).load(background).scaleType(ScaleType.CENTER_CROP).fade(100).into(view);
+                
+                break;
+        }
+    }
 
+    
 
 public Packet getPacket(){
 	if(mPacket==null)
@@ -104,6 +127,8 @@ public void finish()
 	{
 		// TODO: Implement this method
 		super.onDestroy();
+        getFragmentManager().unregisterFragmentLifecycleCallbacks(fl);
+        getSharedPreferences("setting",MODE_PRIVATE).unregisterOnSharedPreferenceChangeListener(this);
 	}
 	public abstract int getIndex();
 
@@ -115,5 +140,21 @@ public void finish()
 		if(getFragmentManager().getBackStackEntryCount()==0)
 			super.onBackPressed();
 	}
-	
+	class FragmentLifecycle extends FragmentManager.FragmentLifecycleCallbacks {
+
+        @Override
+        public void onFragmentAttached(FragmentManager fm, Fragment f, Context context) {
+            int count=view.getChildCount();
+            for(int i=0;i<count;i++){
+                view.getChildAt(i).setVisibility(View.GONE);
+            }
+        }
+
+        @Override
+        public void onFragmentDetached(FragmentManager fm, Fragment f) {
+            if(view.getChildCount()>0)
+            view.getChildAt(view.getChildCount()-1).setVisibility(View.VISIBLE);
+        }
+        
+    }
 }

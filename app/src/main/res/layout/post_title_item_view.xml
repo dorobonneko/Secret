@@ -1,12 +1,13 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="48dp"
-    android:paddingStart="8dp"
+    android:paddingStart="16dp"
 	android:paddingEnd="8dp"
 	android:paddingBottom="8dp"
 	android:paddingTop="8dp"
 	android:gravity="center_vertical">
     <TextView
+        android:textStyle="bold"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
 		android:id="@+id/title"
@@ -15,7 +16,7 @@
         android:textColor="#ff301070"
 		android:singleLine="true"/>
 	<TextView
-		android:text="More"
+		android:text="更多"
 		android:singleLine="true"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"

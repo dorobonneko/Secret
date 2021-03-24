@@ -319,7 +319,7 @@ public class AppBrandFragment extends Fragment implements Window.Callback,SwipeR
 	public void reload() {
 		try {
             try {
-                mRecyclerView.setBackgroundColor(Color.parseColor(ScriptRuntime.toString(mEngine.getOrDefault("bgColor","#ffffffff"))));
+                mRecyclerView.setBackgroundColor(Color.parseColor(ScriptRuntime.toString(mEngine.getOrDefault("bgColor","#00000000"))));
             } catch (Exception e) {}
             layout = ScriptRuntime.toString(mEngine.getOrDefault("layout","grid"));
             initLayout(layout);
@@ -396,7 +396,7 @@ public class AppBrandFragment extends Fragment implements Window.Callback,SwipeR
         //((DefaultItemAnimator)mRecyclerView.getItemAnimator()).setSupportsChangeAnimations(false);
 		mRecyclerView.addItemDecoration(new Space(getContext()));
         
-		mRecyclerView.setAdapter(pa = new PostAdapter(data==null?data = new ArrayList<NativeObject>():data,mRecyclerView));
+		mRecyclerView.setAdapter(pa = new PostAdapter(data==null?data = new ArrayList<NativeObject>():data));
 		mRecyclerView.addOnScrollListener(new Scroll());
         
         
@@ -490,6 +490,7 @@ public class AppBrandFragment extends Fragment implements Window.Callback,SwipeR
                                 case "title":
                                 case "detail":
                                 case "thumb":
+                                case "item":
                                     return 6;
                                 case "post":
                                 case "icon":
