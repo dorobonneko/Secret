@@ -25,5 +25,10 @@ public class PlayViewHolder extends BaseViewHolder {
         title.setText(ScriptRuntime.toString(obj.getOrDefault("title","#$")));
     }
 
+    @Override
+    public void recycle() {
+    }
+
+
     
 }

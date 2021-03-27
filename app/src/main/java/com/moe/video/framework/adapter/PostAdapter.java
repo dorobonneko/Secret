@@ -18,6 +18,7 @@ import org.mozilla.javascript.NativeObject;
 import org.mozilla.javascript.ScriptRuntime;
 import uk.co.senab.photoview.PhotoView;
 import com.moe.video.framework.adapter.viewholder.ItemViewHolder;
+import com.moe.neko.Neko;
 
 public class PostAdapter<T extends BaseViewHolder> extends RecyclerView.Adapter<T> {
 	private List data;
@@ -91,6 +92,12 @@ public class PostAdapter<T extends BaseViewHolder> extends RecyclerView.Adapter<
 	public int getItemCount() {
 		return data.size();
 	}
+
+    @Override
+    public void onViewRecycled(T holder) {
+        super.onViewRecycled(holder);
+        holder.recycle();
+    }
     
 	
     

@@ -35,18 +35,28 @@ function request(opt) {
         opt.method = opt.method?opt.method.toUpperCase() : 'GET';
         opt.url = opt.url || '';
         opt.data = opt.data || null;
+        opt.zip=opt.zip==null?true:opt.zip;
         opt.headers=opt.headers||{};
        var conn=open(opt.url);
 	   conn.setRequestMethod(opt.method);
 	   for(var header in opt.headers){
 		   conn.setRequestProperty(header,opt.headers[header]);
 	   }
+       var accept=conn.getRequestProperty("Accept-Encoding");
+       if(!accept){
+           if(opt.zip){
+           conn.setRequestProperty("Accept-Encoding","gzip;q=1.0, identity; q=0.5, *;q=0");
+           }
+       }
 	   if(opt.data){
 		   var out=conn.getOutputStream();
            out.write(getBytes(opt.data));
 		   out.flush();
 	   }
 	   var input=conn.getInputStream();
+       var encoding=conn.getHeaderField("Content-Encoding");
+       if(encoding&&encoding.equals("gzip"))
+           input=new Packages.java.util.zip.GZIPInputStream(input);
 	   var bytearray=new Packages.java.io.ByteArrayOutputStream();
 	   var len=-1;
 	   var array=Byte(2048);

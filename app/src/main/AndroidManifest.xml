@@ -61,7 +61,7 @@
 			"screenSize|smallestScreenSize|screenLayout|orientation"
 			/>
         <service android:name=".service.AppTaskService"/>
-
+            <service android:name=".service.AudioService"/>
             <activity
             android:launchMode="singleTask"
             android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize"
@@ -92,6 +92,9 @@
         <activity
             android:name=".SettingActivity"
             android:theme="@style/SettingTheme"/>
+        <activity
+            android:name=".AudioActivity"
+            android:launchMode="singleTask"/>
     </application>
 
 </manifest>

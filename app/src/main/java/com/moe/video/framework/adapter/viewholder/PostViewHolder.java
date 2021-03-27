@@ -34,6 +34,12 @@ public class PostViewHolder extends BaseViewHolder {
         
     }
 
+    @Override
+    public void recycle() {
+        Neko.with(thumb).clear(thumb);
+    }
+
+
 
  
     

@@ -55,6 +55,7 @@ SharedPreferences.OnSharedPreferenceChangeListener
         SharedPreferences preferences=getSharedPreferences("setting",MODE_PRIVATE);
         onSharedPreferenceChanged(preferences,"background");
         preferences.registerOnSharedPreferenceChangeListener(this);
+        //startActivity(new Intent(this,AudioActivity.class));
     }
 
     @Override

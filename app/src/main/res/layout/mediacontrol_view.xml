@@ -4,9 +4,10 @@
 	android:layout_width="fill_parent"
 	android:layout_height="fill_parent"
 	android:visibility="visible"
-	android:id="@+id/control">
+	>
 
 	<RelativeLayout
+        android:id="@+id/control_top"
 		android:paddingTop="16dp"
 		android:paddingStart="16dp"
 		android:paddingEnd="16dp"
@@ -74,7 +75,7 @@
 		android:gravity="center_vertical"
 		android:background="@drawable/bottom2top"
 		android:paddingTop="16dp"
-		android:id="@+id/bottom">
+		android:id="@+id/control_bottom">
 
 		<ImageButton
 			android:background="?android:attr/selectableItemBackgroundBorderless"
@@ -91,6 +92,7 @@
 			android:id="@+id/progress"/>
 
 		<TextView
+            android:text="00:00"
 			android:paddingStart="4dp"
 			android:clipToPadding="false"
 			android:layout_width="wrap_content"
@@ -111,6 +113,7 @@
 			android:gravity="center"/>
 
 		<TextView
+            android:text="00:00"
 			android:paddingEnd="4dp"
 			android:clipToPadding="false"
 			android:layout_width="wrap_content"
@@ -135,7 +138,7 @@
 	<ProgressBar
 		android:layout_width="32dp"
 		android:layout_height="32dp"
-		android:layout_above="@id/bottom"
+		android:layout_above="@id/control_bottom"
 		android:layout_marginStart="8dp"
 		android:visibility="invisible"
 		android:id="@+id/loadingprogress"/>

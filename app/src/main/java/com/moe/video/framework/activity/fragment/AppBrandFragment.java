@@ -68,6 +68,7 @@ import org.mozilla.javascript.NativeJavaObject;
 import java.util.function.Predicate;
 import org.mozilla.javascript.Scriptable;
 import java.io.IOException;
+import com.moe.video.framework.AudioActivity;
 public class AppBrandFragment extends Fragment implements Window.Callback,SwipeRefreshLayout.OnRefreshListener,View.OnApplyWindowInsetsListener {
 	private Packet mPacket;
 	private Engine mEngine;
@@ -80,6 +81,16 @@ public class AppBrandFragment extends Fragment implements Window.Callback,SwipeR
     private String video,layout;
     private Object arg;
     private NativeObject exports;
+
+    @Override
+    public void openAudio(NativeObject obj) {
+        startActivity(new Intent(getContext(),AudioActivity.class).putExtra("key",obj));
+    }
+
+    
+    
+    
+    
     public String log(){
         return mEngine.getRuntime().log();
     }

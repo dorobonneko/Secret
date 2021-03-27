@@ -6,7 +6,12 @@ interface Audio{
  void pause();
  void setCallback(IBinder callback);
  boolean isPlaying();
- void loop();
+ void loop(boolean loop);
  boolean isLoop();
+ void select(int id);
+ void next();
+ void pre();
+ int getPosition();
+ void seetTo(long time);
 }
 

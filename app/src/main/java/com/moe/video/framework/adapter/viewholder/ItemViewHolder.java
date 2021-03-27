@@ -38,6 +38,12 @@ public class ItemViewHolder extends BaseViewHolder {
         
     }
 
+    @Override
+    public void recycle() {
+        Neko.with(icon).clear(icon);
+    }
+
+
     
     
 }

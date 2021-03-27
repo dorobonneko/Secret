@@ -22,5 +22,10 @@ public class TitleViewHolder extends BaseViewHolder {
         
     }
 
+    @Override
+    public void recycle() {
+    }
+
+
     
 }

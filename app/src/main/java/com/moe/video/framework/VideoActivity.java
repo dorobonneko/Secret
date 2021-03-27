@@ -48,11 +48,12 @@ import android.support.v4.view.ViewConfigurationCompat;
 import android.view.ViewConfiguration;
 import java.util.HashMap;
 import java.util.Map;
+import com.moe.video.framework.util.TimeUtil;
 
 public class VideoActivity extends Activity implements TextureView.SurfaceTextureListener,MediaPlayer.OnPreparedListener,MediaPlayer.OnInfoListener,Handler.Callback,OnTouchListener,OnClickListener,SeekBar.OnSeekBarChangeListener,MediaPlayer.OnVideoSizeChangedListener,MediaPlayer.OnErrorListener,MediaPlayer.OnCompletionListener,MediaPlayer.OnBufferingUpdateListener
 {
 
-	private View control,progressView;
+	private View control_top,control_bottom,progressView;
 	private MediaPlayer mMediaPlayer;
 	private JSONObject data;
 	private Handler mHandler=new Handler(this);
@@ -61,11 +62,13 @@ public class VideoActivity extends Activity implements TextureView.SurfaceTextur
 	private boolean canClose;
 	private TextureView mTextureView;
 	private float sx,sy;
-	private int scrollState,preSeek;
-	private TextView tips,title;
+	private int scrollState;
+	private TextView tips,title,time,duration;
 	private AudioManager audio;
 	private int scaleType,index;
 	private String dataSource;
+    private SeekBar mSeekBar;
+    private ImageView playorpause;
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
@@ -86,17 +89,21 @@ public class VideoActivity extends Activity implements TextureView.SurfaceTextur
 		mMediaPlayer.setOnErrorListener(this);
 		mMediaPlayer.setOnCompletionListener(this);
         mMediaPlayer.setOnBufferingUpdateListener(this);
-		control = findViewById(R.id.control);
-		control.findViewById(R.id.source).setOnClickListener(this);
-		control.findViewById(R.id.playorpause).setOnClickListener(this);
-		control.findViewById(R.id.pip).setOnClickListener(this);
-		control.findViewById(R.id.close).setOnClickListener(this);
-		control.findViewById(R.id.scale).setOnClickListener(this);
-		progressView = control.findViewById(R.id.loadingprogress);
-		SeekBar seekbar=control.findViewById(R.id.progress);
+		control_top = findViewById(R.id.control_top);
+        control_bottom=findViewById(R.id.control_bottom);
+		findViewById(R.id.source).setOnClickListener(this);
+		findViewById(R.id.playorpause).setOnClickListener(this);
+		findViewById(R.id.pip).setOnClickListener(this);
+		findViewById(R.id.close).setOnClickListener(this);
+		findViewById(R.id.scale).setOnClickListener(this);
+        time=findViewById(R.id.current_time);
+        duration=findViewById(R.id.time);
+        playorpause=findViewById(R.id.playorpause);
+		progressView = findViewById(R.id.loadingprogress);
+		mSeekBar=findViewById(R.id.progress);
 		tips = findViewById(R.id.tips);
         title=findViewById(R.id.title);
-		seekbar.setOnSeekBarChangeListener(this);
+		mSeekBar.setOnSeekBarChangeListener(this);
 		mTextureView = findViewById(R.id.textureview);
 		mTextureView.setSurfaceTextureListener(this);
 		findViewById(R.id.content).setOnTouchListener(this);
@@ -111,7 +118,7 @@ public class VideoActivity extends Activity implements TextureView.SurfaceTextur
 		{
 			data = new JSONObject(intent.getStringExtra("data"));
             title.setText(data.getString("title"));
-			preSeek=0;
+			mSeekBar.setProgress(0);
 			changeSource(0);
 		}
 		catch (JSONException e)
@@ -120,10 +127,6 @@ public class VideoActivity extends Activity implements TextureView.SurfaceTextur
 	}
 	private void changeSource(int index)
 	{
-        if(mMediaPlayer.getDuration()>0)
-            preSeek=mMediaPlayer.getCurrentPosition();
-        else
-            preSeek=0;
         
         this.index=index;
 		mMediaPlayer.stop();
@@ -144,7 +147,7 @@ public class VideoActivity extends Activity implements TextureView.SurfaceTextur
 						mMediaPlayer.setDataSource(getApplicationContext(),Uri.parse(dataSource),headers);
 						mMediaPlayer.prepareAsync();
 						progressView.setVisibility(View.VISIBLE);
-						((ImageView)control.findViewById(R.id.playorpause)).setImageResource(R.drawable.pause);
+						playorpause.setImageResource(R.drawable.pause);
 						actions.set(0, new RemoteAction(Icon.createWithResource(this, R.drawable.pause), "play", "play", PendingIntent.getBroadcast(this, 0, new Intent(getPackageName()).putExtra("action", "playorpause"), 0)));
 						if (isInPictureInPictureMode())
 							enterPIP();
@@ -160,15 +163,21 @@ public class VideoActivity extends Activity implements TextureView.SurfaceTextur
 
     @Override
     public void onBufferingUpdate(MediaPlayer p1, int p2) {
-        ((SeekBar)control.findViewById(R.id.progress)).setSecondaryProgress(p2);
+        SeekBar seekbar=findViewById(R.id.progress);
+        seekbar.setSecondaryProgress((int)(p2/100f*seekbar.getMax()));
     }
-
+    public int getCurrentPosition(){
+        if(mMediaPlayer.isPlaying())
+            return mMediaPlayer.getCurrentPosition();
+            else
+                return mSeekBar.getProgress();
+    }
 
 	@Override
 	public void onPrepared(MediaPlayer p1)
 	{
 		progressView.setVisibility(View.INVISIBLE);
-		p1.seekTo(preSeek);
+		p1.seekTo(mSeekBar.getProgress());
 		p1.start();
 	}
 
@@ -177,7 +186,7 @@ public class VideoActivity extends Activity implements TextureView.SurfaceTextur
 	{
 		switch(p2){
 			case p1.MEDIA_ERROR_UNKNOWN:
-				preSeek=mMediaPlayer.getCurrentPosition();
+				//mSeekBar.setProgress(p1.getCurrentPosition());
 				mMediaPlayer.stop();
 				mMediaPlayer.reset();
 				try
@@ -211,12 +220,8 @@ public class VideoActivity extends Activity implements TextureView.SurfaceTextur
 	}
 
 	private void pause(){
-        if(mMediaPlayer.getDuration()>0)
-            preSeek=mMediaPlayer.getCurrentPosition();
-            else
-              preSeek=0;
-		mMediaPlayer.pause();
-		((ImageView)control.findViewById(R.id.playorpause)).setImageResource(R.drawable.play);
+        mMediaPlayer.pause();
+		playorpause.setImageResource(R.drawable.play);
 		actions.set(0, new RemoteAction(Icon.createWithResource(this, R.drawable.play), "play", "play", PendingIntent.getBroadcast(this, 0, new Intent(getPackageName()).putExtra("action", "playorpause"), 0)));
 		if (isInPictureInPictureMode())
 			enterPIP();
@@ -228,14 +233,14 @@ public class VideoActivity extends Activity implements TextureView.SurfaceTextur
 		switch (p2)
 		{
 			case p1.MEDIA_INFO_BUFFERING_START:
-				progressView.setVisibility(View.VISIBLE);
+                progressView.setVisibility(View.VISIBLE);
 				break;
 			case p1.MEDIA_INFO_BUFFERING_END:
 				progressView.setVisibility(View.INVISIBLE);
 				break;
 			case p1.MEDIA_INFO_VIDEO_RENDERING_START:
-				((TextView)control.findViewById(R.id.time)).setText(getTime(p1.getDuration()));
-				((SeekBar)control.findViewById(R.id.progress)).setMax(mMediaPlayer.getDuration());
+			    duration.setText(TimeUtil.getTime(p1.getDuration()));
+				mSeekBar.setMax(mMediaPlayer.getDuration());
 				break;
 		}
 		return true;
@@ -270,7 +275,7 @@ public class VideoActivity extends Activity implements TextureView.SurfaceTextur
 							//横向滑动
 							if(mMediaPlayer.getDuration()>0){
 							scrollState = 0;
-							currentPosition=mMediaPlayer.getCurrentPosition();
+							currentPosition=getCurrentPosition();
 							mHandler.removeMessages(1);
 							}else{
 								scrollState=3;
@@ -312,9 +317,9 @@ public class VideoActivity extends Activity implements TextureView.SurfaceTextur
 						int distance=(int)((p2.getRawX()-sx)/p1.getWidth()*300000);
 						int position=currentPosition+distance;
 						position=Math.max(Math.min(mMediaPlayer.getDuration(),position),0);
-						((TextView)control.findViewById(R.id.current_time)).setText(getTime(position));
-						((SeekBar)control.findViewById(R.id.progress)).setProgress(position);
-						tips.setText((distance<0?"-":"+")+getTime(distance)+"/"+getTime(position));
+						time.setText(TimeUtil.getTime(position));
+						mSeekBar.setProgress(position);
+						tips.setText((distance<0?"-":"+")+TimeUtil.getTime(distance)+"/"+TimeUtil.getTime(position));
 						break;
 					case 1:{
 							WindowManager.LayoutParams params=getWindow().getAttributes();
@@ -345,7 +350,7 @@ public class VideoActivity extends Activity implements TextureView.SurfaceTextur
 			case p2.ACTION_CANCEL:
 				tips.setText(null);
 				if(scrollState==0){
-					mMediaPlayer.seekTo(((SeekBar)control.findViewById(R.id.progress)).getProgress());
+					mMediaPlayer.seekTo(mSeekBar.getProgress());
 					mHandler.sendEmptyMessage(1);
 					}
 				break;
@@ -440,15 +445,15 @@ private void scale(){
 		switch (p1.what)
 		{
 			case 0:
-				control.setVisibility(View.GONE);
+				hide();
 				break;
 			case 1:
-				((TextView)control.findViewById(R.id.current_time)).setText(getTime(mMediaPlayer.getCurrentPosition()));
-				((SeekBar)control.findViewById(R.id.progress)).setProgress(mMediaPlayer.getCurrentPosition());
+				time.setText(TimeUtil.getTime(getCurrentPosition()));
+				mSeekBar.setProgress(getCurrentPosition());
 				mHandler.sendEmptyMessageDelayed(1, 1000);
 				break;
             case 2:
-                if (control.getVisibility() == View.VISIBLE)
+                if (control_bottom.getVisibility() == View.VISIBLE)
                     hide();
                 else
                     show();
@@ -604,13 +609,15 @@ private void scale(){
 
 	private void show()
 	{
-		control.setVisibility(View.VISIBLE);
+		control_top.setVisibility(View.VISIBLE);
+        control_bottom.setVisibility(View.VISIBLE);
 		mHandler.removeMessages(0);
 		mHandler.sendEmptyMessageDelayed(0, 5000);
 	}
 	private void hide()
 	{
-		control.setVisibility(View.GONE);
+		control_top.setVisibility(View.INVISIBLE);
+        control_bottom.setVisibility(View.INVISIBLE);
 	}
 	@Override
 	public void onBackPressed()
@@ -678,37 +685,14 @@ private void scale(){
 	}
 
 
-	private String getTime(int time)
-	{
-		time = Math.abs(time);
-		if (time == 0)return "00:00";
-		time /= 1000;
-		if (time < 60)
-			return "00:".concat(getFormat(time));
-		int second=time % 60;
-		time /= 60;
-		if (time < 60)
-		{
-			return getFormat(time).concat(":").concat(getFormat(second));
-		}
-		int minute=time % 60;
-		return getFormat(time / 60).concat(":").concat(getFormat(minute)).concat(":").concat(getFormat(second));
-
-	}
-	private String getFormat(int time)
-	{
-		String time_=String.valueOf(time);
-		if (time_.length() == 1)
-			return "0" + time_;
-		return time_;
-	}
+	
 	private void playorpause()
 	{
 		if (mMediaPlayer.isPlaying())
 			mMediaPlayer.pause();
 		else
 			mMediaPlayer.start();
-		((ImageView)control.findViewById(R.id.playorpause)).setImageResource(mMediaPlayer.isPlaying() ?R.drawable.pause: R.drawable.play);
+		playorpause.setImageResource(mMediaPlayer.isPlaying() ?R.drawable.pause: R.drawable.play);
 		actions.set(0, new RemoteAction(Icon.createWithResource(this, mMediaPlayer.isPlaying() ?R.drawable.pause: R.drawable.play), "play", "play", PendingIntent.getBroadcast(this, 0, new Intent(getPackageName()).putExtra("action", "playorpause"), 0)));
 		if (isInPictureInPictureMode())
 			enterPIP();
@@ -725,7 +709,7 @@ private void scale(){
 	public void onStopTrackingTouch(SeekBar p1)
 	{
 		mMediaPlayer.seekTo(p1.getProgress());
-		mHandler.sendEmptyMessageDelayed(0, 3000);
+		show();
 		mHandler.sendEmptyMessage(1);
 	}
 
@@ -734,7 +718,7 @@ private void scale(){
 	{
 		if (p3)
 		{
-			((TextView)control.findViewById(R.id.current_time)).setText(getTime(p2));
+			time.setText(TimeUtil.getTime(p2));
 		}
 	}
 

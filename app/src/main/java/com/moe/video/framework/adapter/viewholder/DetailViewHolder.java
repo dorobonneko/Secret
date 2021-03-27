@@ -31,9 +31,16 @@ public class DetailViewHolder extends BaseViewHolder {
         des.setText(Html.fromHtml(info));
         String desc=ScriptRuntime.toString(obj.get("desc"));
         description.setText(desc == null ?null: Html.fromHtml(desc));
-        Neko.with((View)thumb.getParent()).load(ScriptRuntime.toString(obj.get("thumb"))).asBitmap().scaleType(ScaleType.CENTER_CROP).fade(300, 200).transform(new RoundTransform(5), new BlurTransform(15)).into((View)thumb.getParent());
+        Neko.with(thumb.getParent()).load(ScriptRuntime.toString(obj.get("thumb"))).asBitmap().scaleType(ScaleType.CENTER_CROP).fade(300, 200).transform(new RoundTransform(5), new BlurTransform(15)).into((View)thumb.getParent());
         //Pussy.$(dvh.itemView.getContext()).load(ScriptRuntime.toString(obj.get("thumb"))).execute().anime(Anim.fade(500)).transformer(new CropTransformer(Gravity.CENTER),new com.moe.pussy.transformer.BlurTransformer(55),new RoundTransformer(dvh.itemView.getResources().getDisplayMetrics(),5)).into((View)dvh.thumb.getParent());
 
     }
+
+    @Override
+    public void recycle() {
+        Neko.with(thumb).clear(thumb);
+        Neko.with(thumb.getParent()).clear((View)thumb.getParent());
+    }
+
     
 }

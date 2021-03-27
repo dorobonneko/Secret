@@ -39,6 +39,12 @@ public class ImageViewHolder extends BaseViewHolder{
         
     }
 
+    @Override
+    public void recycle() {
+        Neko.with(view).clear(view);
+    }
+
+
     
     
 }

@@ -47,4 +47,5 @@ public abstract class BaseViewHolder extends RecyclerView.ViewHolder implements 
         int b = random.nextInt(100)+100;
         return Color.argb(0x8a,r, g, b);
     }
+    public abstract void recycle();
     }

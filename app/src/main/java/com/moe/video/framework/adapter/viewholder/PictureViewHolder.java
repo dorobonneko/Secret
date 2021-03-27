@@ -35,9 +35,15 @@ public class PictureViewHolder extends BaseViewHolder {
         cpd.setStyle(CircularProgressDrawable.LARGE);
         cpd.setBounds(bounds);
         cpd.setColorSchemeColors(new int[]{0xfffa8a9a});
-        Neko.with(itemView).load(ScriptRuntime.toString(obj.get(obj.getOrDefault("thumb_key","thumb")))).placeHolder(cpd).into(view);
+        Neko.with(view).load(ScriptRuntime.toString(obj.get(obj.getOrDefault("thumb_key","thumb")))).placeHolder(cpd).into(view);
         
     }
+
+    @Override
+    public void recycle() {
+        Neko.with(view).clear(view);
+    }
+
 
     
 }

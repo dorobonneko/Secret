@@ -7,5 +7,6 @@ interface AudioCallback {
     void onEnd();
     void onError(int type,int code);
     void onServiceClose();
+    void onInfo(int position,int duration);
     
 }
