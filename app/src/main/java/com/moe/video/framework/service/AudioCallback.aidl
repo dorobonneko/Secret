@@ -8,5 +8,5 @@ interface AudioCallback {
     void onError(int type,int code);
     void onServiceClose();
     void onInfo(int position,int duration);
-    
+    void onSelected(String title,String icon);
 }

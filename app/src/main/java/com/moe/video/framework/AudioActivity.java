@@ -157,6 +157,15 @@ public class AudioActivity extends Activity implements ServiceConnection,View.On
     class Callback extends AudioCallback.Stub {
 
         @Override
+        public void onSelected(String title, String icon) throws RemoteException {
+            setTitle(title);
+            if(icon!=null)
+            Neko.with(this).load(icon).circleCrop().into((ImageView)findViewById(R.id.icon));
+            
+        }
+
+        
+        @Override
         public void onProgress(int progress) throws RemoteException {
         
             mSeekBar.setSecondaryProgress((int)(progress/100f*mSeekBar.getMax()));

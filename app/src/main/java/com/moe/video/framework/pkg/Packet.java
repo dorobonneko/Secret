@@ -75,8 +75,12 @@ public class Packet
 		try
 		{
 			if (file != null)file.close();
+            file=null;
 		}
 		catch (IOException e)
 		{}
 	}
+    public boolean isClose(){
+        return file==null;
+    }
 }

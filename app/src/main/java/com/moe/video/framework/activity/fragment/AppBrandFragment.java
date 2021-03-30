@@ -83,6 +83,14 @@ public class AppBrandFragment extends Fragment implements Window.Callback,SwipeR
     private NativeObject exports;
 
     @Override
+    public void onResume() {
+        super.onResume();
+        Function fun=(Function)exports.get("onresume");
+        if(fun!=null)
+            fun.call(mEngine.getContext(),fun,fun,new Object[]{arg});
+    }
+
+    @Override
     public void openAudio(NativeObject obj) {
         startActivity(new Intent(getContext(),AudioActivity.class).putExtra("key",obj));
     }
@@ -108,9 +116,7 @@ public class AppBrandFragment extends Fragment implements Window.Callback,SwipeR
         if(exports==null)return;
         Function fun=(Function) exports.get("onload");
         if(fun!=null){
-            Context context=Context.enter();
-            fun.call(context,fun,fun,new Object[]{arg});
-            context.exit();
+            fun.call(mEngine.getContext(),fun,fun,new Object[]{arg});
         }
     }
 

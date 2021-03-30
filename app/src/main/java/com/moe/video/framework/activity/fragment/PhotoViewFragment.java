@@ -28,7 +28,7 @@ import android.net.Uri;
 import android.text.TextUtils;
 import android.support.v7.widget.SnapHelper;
 
-public class PhotoViewFragment extends AppBrandFragment implements View.OnApplyWindowInsetsListener,Toolbar.OnMenuItemClickListener{
+ class PhotoViewFragment extends AppBrandFragment implements View.OnApplyWindowInsetsListener,Toolbar.OnMenuItemClickListener{
     private RecyclerView mRecyclerView;
     private ImageAdapter adapter;
     private SwipeRefreshLayout refresh;

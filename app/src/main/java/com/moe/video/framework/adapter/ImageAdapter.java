@@ -14,7 +14,7 @@ import android.support.v4.widget.CircularProgressDrawable;
 import android.graphics.Rect;
 import android.content.res.Resources;
 
-public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHolder> {
+ class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHolder> {
     private List<NativeObject> array;
     private Rect bounds=new Rect();
     private String key;

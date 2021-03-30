@@ -36,6 +36,7 @@ import java.util.List;
 import android.content.SharedPreferences;
 import android.widget.ImageView.ScaleType;
 import android.app.FragmentManager;
+import com.moe.neko.transform.BlurTransform;
 
 public abstract class ModelActivity extends Activity implements SharedPreferences.OnSharedPreferenceChangeListener
 {
@@ -47,6 +48,7 @@ public abstract class ModelActivity extends Activity implements SharedPreference
 	{
 		
 		super.onCreate(savedInstanceState);
+        mPacket=getPacket();
         view=findViewById(android.R.id.content);
         SharedPreferences preferences=getSharedPreferences("setting",MODE_PRIVATE);
         preferences.registerOnSharedPreferenceChangeListener(this);
@@ -57,19 +59,14 @@ public abstract class ModelActivity extends Activity implements SharedPreference
 				@Override
 				public void onReceive(Context p1, Intent p2)
 				{
-					if(getTaskId()==p2.getIntExtra("id",-1))
-						finishAndRemoveTask();
+					finishAndRemoveTask();
 				}
-			}, new IntentFilter(getPackageName()));
-		mPacket=PacketManager.getInstance().getPacket(getIntent().getAction());
+			}, new IntentFilter(mPacket.packageName));
+		
 		Bitmap logo=BitmapUtil.DrawableToBitmap(PacketManager.getInstance().loadLogo(mPacket));
-		ActivityManager.TaskDescription task=new ActivityManager.TaskDescription(mPacket.title,logo);
-		setTaskDescription(task);
-		ActivityTask.TaskDesc desc=new ActivityTask.TaskDesc();
-		desc.index=getIndex();
-		desc.taskId=getTaskId();
-		desc.packageName=mPacket.packageName;
-		ActivityTask.addTask(this,desc);
+		ActivityManager.TaskDescription desc=new ActivityManager.TaskDescription(mPacket.title,logo);
+        setTaskDescription(desc);
+		//ActivityTask.addTask(this,desc);
 		if(savedInstanceState==null){
 		AppBrandFragment abf=new AppBrandFragment();
 		Bundle mBundle=new Bundle();
@@ -102,7 +99,7 @@ public abstract class ModelActivity extends Activity implements SharedPreference
                 if(background==null)
                     view.setBackground(null);
                 else
-                    Neko.with(view).load(background).scaleType(ScaleType.CENTER_CROP).fade(100).into(view);
+                    Neko.with(view).load(background).scaleType(ScaleType.CENTER_CROP).fade(100).asBitmap().transform(new BlurTransform(15)).into(view);
                 
                 break;
         }
@@ -111,22 +108,18 @@ public abstract class ModelActivity extends Activity implements SharedPreference
     
 
 public Packet getPacket(){
+    if(mPacket!=null&&mPacket.isClose())
+        mPacket=null;
 	if(mPacket==null)
 		mPacket=PacketManager.getInstance().getPacket(getIntent().getAction());
 	return mPacket;
 }
 
-@Override
-public void finish()
-{
-	finishAndRemoveTask();
-}
-
 	@Override
 	protected void onDestroy()
 	{
-		// TODO: Implement this method
 		super.onDestroy();
+        mPacket.close();
         getFragmentManager().unregisterFragmentLifecycleCallbacks(fl);
         getSharedPreferences("setting",MODE_PRIVATE).unregisterOnSharedPreferenceChangeListener(this);
 	}
@@ -135,10 +128,11 @@ public void finish()
 	@Override
 	public void onBackPressed()
 	{
-		// TODO: Implement this method
-		super.onBackPressed();
-		if(getFragmentManager().getBackStackEntryCount()==0)
-			super.onBackPressed();
+		
+		if(getFragmentManager().getBackStackEntryCount()<=1)
+			finish();
+            else
+                getFragmentManager().popBackStack();
 	}
 	class FragmentLifecycle extends FragmentManager.FragmentLifecycleCallbacks {
 

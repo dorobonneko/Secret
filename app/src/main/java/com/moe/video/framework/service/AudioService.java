@@ -162,6 +162,10 @@ MediaPlayer.OnTimedTextListener {
                 mMediaPlayer.setDataSource(getApplicationContext(), Uri.parse(obj.getString("src")), headers);
                 mMediaPlayer.prepareAsync();
                 preparing = true;
+                try {
+                    if (mAudioCallback != null)
+                        mAudioCallback.onSelected(obj.getString("title"), obj.getString("icon"));
+                } catch (JSONException e) {} catch (RemoteException e) {}
                 play();
             } catch (IOException e) {} catch (JSONException e) {} catch (IllegalStateException e) {} catch (SecurityException e) {} catch (IllegalArgumentException e) {}
         }
@@ -233,6 +237,22 @@ MediaPlayer.OnTimedTextListener {
         public void seetTo(long time) throws RemoteException {
             mMediaPlayer.seekTo(time,mMediaPlayer.SEEK_CLOSEST);
         }
+
+        @Override
+        public int getSelect() throws RemoteException {
+            return data.getKey(index);
+        }
+
+        @Override
+        public String[] getSelectInfo() throws RemoteException {
+            JSONObject jo=data.get(getSelect());
+            try {
+                return new String[]{jo.getString("title"),jo.getString("icon")};
+            } catch (JSONException e) {}
+            return null;
+        }
+
+
 
         
 

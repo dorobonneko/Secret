@@ -56,6 +56,9 @@ public class Engine
         result=context.evaluateReader(script, reader, name, 1, null);
          return result;
 	}
+    public Context getContext(){
+        return context;
+    }
 	/*public Object invokeMethod(String name,Object... args) throws NoSuchMethodException, ScriptException{
 		return engine.invokeMethod(engine,name,args);
 	}*/

@@ -73,7 +73,7 @@ public class PacketManager
 		return icon;
 	}
 	public Packet getPacket(String packageName){
-		Packet p= list.get(packageName);
+		/*Packet p= list.get(packageName);
 		if(p!=null){
 			if(p.lastModify!=new File(workPath,packageName).lastModified()){
 				p.close();
@@ -89,8 +89,11 @@ public class PacketManager
 			}
 			catch (IOException e)
 			{}
-		}
-		return p;
+		}*/
+		try {
+            return new Packet(new File(workPath, packageName).getAbsolutePath(), false);
+        } catch (IOException e) {}
+        return null;
 	}
 	public List<Packet> getAllPacket(){
 		return new ArrayList<Packet>(list.values());

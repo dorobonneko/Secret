@@ -13,5 +13,7 @@ interface Audio{
  void pre();
  int getPosition();
  void seetTo(long time);
+ int getSelect();
+ String[] getSelectInfo();
 }
 
