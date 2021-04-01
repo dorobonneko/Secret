@@ -9,16 +9,14 @@ import android.text.TextUtils;
 
 public class Packet
 {
-	public String packageName;
+	public String packageName,versionName;
 	public String source;
 	public String exe,title;
-	String logo;
+	public String logo;
 	public int version;
-	private ZipFile file;
-	long lastModify;
-	Packet(String  path,boolean readHead) throws IOException{
+	public Packet(String  path) throws IOException{
 		this.source=path;
-		file=new ZipFile(path);
+		ZipFile file=new ZipFile(path);
 		BufferedReader br=new BufferedReader(new InputStreamReader(file.getInputStream(file.getEntry("info.ini"))));
 		String line=null;
 		while((line=br.readLine())!=null){
@@ -44,43 +42,15 @@ public class Packet
 						version=Integer.parseInt(value);
 						}catch(Exception e){}
 						break;
+                    case "versionname":
+                        versionName=value;
+                        break;
+                        
 				}
 			}
 		}
 		br.close();
-		if(readHead)
-			file.close();
+		file.close();
 	}
-	public InputStream getFile(String path){
-		InputStream input=null;
-		try
-		{
-			input=file.getInputStream(file.getEntry(path));
-			return input;
-		}
-		catch (IOException e)
-		{}
-		return null;
-	}
-	InputStream loadLogo(){
-		try
-		{
-			return file.getInputStream(file.getEntry(logo));
-		}
-		catch (Exception e)
-		{}
-		return null;
-	}
-	public void close(){
-		try
-		{
-			if (file != null)file.close();
-            file=null;
-		}
-		catch (IOException e)
-		{}
-	}
-    public boolean isClose(){
-        return file==null;
-    }
+	
 }

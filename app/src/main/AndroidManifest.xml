@@ -32,6 +32,7 @@
         android:name=".app.Application"
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
+        android:roundIcon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme"
         android:resizeableActivity="true">
@@ -94,6 +95,10 @@
         <activity
             android:name=".AudioActivity"
             android:launchMode="singleTask"/>
+        <provider
+
+            android:authorities="Secret.PackageManager"  
+            android:name=".provider.PackageProvider"/>
     </application>
 
 </manifest>

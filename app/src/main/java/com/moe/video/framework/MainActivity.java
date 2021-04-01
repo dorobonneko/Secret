@@ -4,17 +4,14 @@ import android.app.*;
 import android.os.*;
 import android.widget.Toolbar;
 import android.widget.GridView;
-import com.moe.video.framework.pkg.Packet;
 import java.util.List;
 import com.moe.video.framework.adapter.AppAdapter;
 import java.util.ArrayList;
-import com.moe.video.framework.pkg.PacketManager;
 import android.view.Menu;
 import android.view.MenuItem;
 import com.moe.video.framework.app.FolderDialog;
 import java.io.File;
 import android.Manifest;
-import android.content.pm.PackageManager;
 import java.io.IOException;
 import android.widget.Toast;
 import android.view.View;
@@ -31,12 +28,22 @@ import java.net.HttpURLConnection;
 import android.content.SharedPreferences;
 import com.moe.neko.Neko;
 import android.widget.ImageView.ScaleType;
-
-public class MainActivity extends Activity implements FolderDialog.Callback,GridView.OnItemClickListener,GridView.OnItemLongClickListener,PacketManager.OnPacketChangedListener,
+import android.database.Cursor;
+import com.moe.video.framework.aidl.PackageManager;
+import com.moe.video.framework.content.Package;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.IntentFilter;
+import java.util.Collections;
+import com.moe.video.framework.util.ChinaSort;
+public class MainActivity extends Activity implements FolderDialog.Callback,GridView.OnItemClickListener,GridView.OnItemLongClickListener,
 SharedPreferences.OnSharedPreferenceChangeListener
 {
 	private GridView mGridView;
 	private AppAdapter mAppAdapter;
+    private List<Package> list;
+    private PackageManager pm;
+    private PackageReciver pr=new PackageReciver();
 	@Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -44,17 +51,31 @@ SharedPreferences.OnSharedPreferenceChangeListener
         setContentView(R.layout.main);
 		setActionBar((Toolbar)findViewById(R.id.toolbar));
 		mGridView=findViewById(R.id.gridview);
-		PacketManager.getInstance().registerOnPacketChangedListener(this);
-		mGridView.setAdapter(mAppAdapter=new AppAdapter(PacketManager.getInstance()));
+		Cursor cursor=getContentResolver().query(com.moe.video.framework.content.PackageManager.AUTH,null,null,null,null);
+        pm=PackageManager.Stub.asInterface(cursor.getExtras().getBinder("packageManager"));
+		cursor.close();
+        mGridView.setAdapter(mAppAdapter=new AppAdapter(list=new ArrayList<Package>(),pm));
 		mGridView.setNumColumns(4);
 		mGridView.setOnItemClickListener(this);
 		mGridView.setOnItemLongClickListener(this);
 		getWindow().getDecorView().setSystemUiVisibility(getWindow().getDecorView().getSystemUiVisibility()|View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-		if(checkCallingOrSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)==PackageManager.PERMISSION_DENIED)
+		if(checkCallingOrSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)==android.content.pm.PackageManager.PERMISSION_DENIED)
 			requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},4676);
         SharedPreferences preferences=getSharedPreferences("setting",MODE_PRIVATE);
         onSharedPreferenceChanged(preferences,"background");
         preferences.registerOnSharedPreferenceChangeListener(this);
+        IntentFilter filter=new IntentFilter();
+        filter.addAction(com.moe.video.framework.content.PackageManager.ACTION_ADD);
+        filter.addAction(com.moe.video.framework.content.PackageManager.ACTION_UPDATE);
+        filter.addAction(com.moe.video.framework.content.PackageManager.ACTION_REMOVE);
+        try {
+            List data=pm.queryAll();
+            list.clear();
+            list.addAll(data);
+            Collections.sort(list, new ChinaSort());
+            mAppAdapter.notifyDataSetChanged();
+        } catch (RemoteException e) {}
+        registerReceiver(pr,filter);
         //startActivity(new Intent(this,AudioActivity.class));
     }
 
@@ -78,7 +99,7 @@ SharedPreferences.OnSharedPreferenceChangeListener
 	public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults)
 	{
 		if(requestCode==4676){
-			if(grantResults[0]==PackageManager.PERMISSION_DENIED)finish();
+			if(grantResults[0]==android.content.pm.PackageManager.PERMISSION_DENIED)finish();
 		}
 		super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 	}
@@ -111,7 +132,7 @@ SharedPreferences.OnSharedPreferenceChangeListener
 	{
 		try
 		{
-			PacketManager.getInstance().installPacket(file.getAbsolutePath());
+			pm.install(file.getAbsolutePath());
 		}
 		catch (Exception e)
 		{Toast.makeText(getApplicationContext(),"文件错误",Toast.LENGTH_SHORT).show();}
@@ -121,46 +142,47 @@ SharedPreferences.OnSharedPreferenceChangeListener
 	@Override
 	public void onItemClick(AdapterView<?> p1, View p2, int p3, long p4)
 	{
-		Packet p=(Packet)p1.getAdapter().getItem(p3);
+		Package p=(Package)p1.getAdapter().getItem(p3);
 		ActivityTask.startTask(this,p.packageName);
 	}
 
 	@Override
 	public boolean onItemLongClick(AdapterView<?> p1, View p2, int p3, long p4)
 	{
-		final Packet p=(Packet)p1.getAdapter().getItem(p3);
+		final Package p=(Package)p1.getAdapter().getItem(p3);
 		new AlertDialog.Builder(this).setTitle("删除？").setMessage(p.title).setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener(){
 
 				@Override
 				public void onClick(DialogInterface p1, int p2)
 				{
-					PacketManager.getInstance().uninstallPacket(p.packageName);
+					try {
+                        pm.unInstall(p.packageName);
+                    } catch (RemoteException e) {}
 				}
 			}).setNegativeButton(android.R.string.cancel,null).show();
 		return true;
 	}
 
-	@Override
-	public void onPacketUpdate(Packet old, Packet new_)
-	{
-		ActivityTask.stopTask(this,old.packageName);
-	}
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(pr);
+    }
 
-	@Override
-	public void onPacketRemoved(Packet packet)
-	{
-		ActivityTask.stopTask(this,packet.packageName);
-	}
+    class PackageReciver extends BroadcastReceiver {
 
-	@Override
-	public void onPacketAdded(Packet packet)
-	{
-	}
+        @Override
+        public void onReceive(Context p1, Intent p2) {
+            try {
+                List data=pm.queryAll();
+                list.clear();
+                list.addAll(data);
+                Collections.sort(list, new ChinaSort());
+                mAppAdapter.notifyDataSetChanged();
+            } catch (RemoteException e) {}
+        }
 
-
-
-
-
-
+    
+}
 	
 }

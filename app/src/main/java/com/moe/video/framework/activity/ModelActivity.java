@@ -1,53 +1,47 @@
 package com.moe.video.framework.activity;
 import android.app.Activity;
-import android.os.Bundle;
 import android.app.ActivityManager;
-import com.moe.video.framework.pkg.Packet;
-import com.moe.video.framework.util.StringUtil;
-import java.io.IOException;
-import com.moe.video.framework.pkg.PacketManager;
-import android.graphics.Bitmap;
-import com.moe.video.framework.util.BitmapUtil;
-import java.io.Reader;
-import java.io.InputStreamReader;
-import android.content.BroadcastReceiver;
-import android.content.IntentFilter;
-import android.content.Intent;
-import android.widget.TextView;
-import com.moe.video.framework.activity.fragment.AppBrandFragment;
-import android.view.View;
-import org.json.JSONException;
-import org.json.JSONObject;
-import android.widget.Toast;
-import android.provider.Settings;
-import android.net.Uri;
-import android.content.res.Configuration;
-import com.moe.video.framework.VideoActivity;
-import android.content.Context;
-import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.FrameLayout;
-import android.view.Gravity;
-import com.moe.video.framework.R;
 import android.app.AlertDialog;
-import com.moe.neko.Neko;
 import android.app.Fragment;
-import java.util.List;
-import android.content.SharedPreferences;
-import android.widget.ImageView.ScaleType;
 import android.app.FragmentManager;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.os.Bundle;
+import android.view.Gravity;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.ImageView.ScaleType;
+import com.moe.neko.Neko;
 import com.moe.neko.transform.BlurTransform;
+import com.moe.video.framework.R;
+import com.moe.video.framework.activity.fragment.AppBrandFragment;
+import com.moe.video.framework.aidl.PackageManager;
+import com.moe.video.framework.content.Package;
+import com.moe.video.framework.util.BitmapUtil;
+import java.util.List;
+import android.os.RemoteException;
 
 public abstract class ModelActivity extends Activity implements SharedPreferences.OnSharedPreferenceChangeListener
 {
-	private Packet mPacket;
+	private Package mPacket;
     private FragmentLifecycle fl=new FragmentLifecycle();
     private ViewGroup view;
+    private PackageManager pm;
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
 		
 		super.onCreate(savedInstanceState);
+        Cursor cursor=getContentResolver().query(com.moe.video.framework.content.PackageManager.AUTH,null,null,null,null);
+        pm=PackageManager.Stub.asInterface(cursor.getExtras().getBinder("packageManager"));
+		cursor.close();
         mPacket=getPacket();
         view=findViewById(android.R.id.content);
         SharedPreferences preferences=getSharedPreferences("setting",MODE_PRIVATE);
@@ -63,14 +57,14 @@ public abstract class ModelActivity extends Activity implements SharedPreference
 				}
 			}, new IntentFilter(mPacket.packageName));
 		
-		Bitmap logo=BitmapUtil.DrawableToBitmap(PacketManager.getInstance().loadLogo(mPacket));
+		Bitmap logo=mPacket.loadLogo();
 		ActivityManager.TaskDescription desc=new ActivityManager.TaskDescription(mPacket.title,logo);
         setTaskDescription(desc);
 		//ActivityTask.addTask(this,desc);
 		if(savedInstanceState==null){
 		AppBrandFragment abf=new AppBrandFragment();
 		Bundle mBundle=new Bundle();
-		mBundle.putString("exe",mPacket.exe);
+		mBundle.putString("exe",mPacket.main);
 		abf.setArguments(mBundle);
         getFragmentManager().beginTransaction().add(android.R.id.content,abf).addToBackStack(null).commit();
 		ViewGroup vg=(ViewGroup) getWindow().getDecorView();
@@ -107,11 +101,11 @@ public abstract class ModelActivity extends Activity implements SharedPreference
 
     
 
-public Packet getPacket(){
-    if(mPacket!=null&&mPacket.isClose())
-        mPacket=null;
-	if(mPacket==null)
-		mPacket=PacketManager.getInstance().getPacket(getIntent().getAction());
+public Package getPacket(){
+    try {
+        if (mPacket == null)
+            mPacket = pm.query(getIntent().getAction());
+    } catch (RemoteException e) {}
 	return mPacket;
 }
 
@@ -119,8 +113,7 @@ public Packet getPacket(){
 	protected void onDestroy()
 	{
 		super.onDestroy();
-        mPacket.close();
-        getFragmentManager().unregisterFragmentLifecycleCallbacks(fl);
+         getFragmentManager().unregisterFragmentLifecycleCallbacks(fl);
         getSharedPreferences("setting",MODE_PRIVATE).unregisterOnSharedPreferenceChangeListener(this);
 	}
 	public abstract int getIndex();

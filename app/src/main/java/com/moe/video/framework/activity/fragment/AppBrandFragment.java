@@ -69,8 +69,9 @@ import java.util.function.Predicate;
 import org.mozilla.javascript.Scriptable;
 import java.io.IOException;
 import com.moe.video.framework.AudioActivity;
+import com.moe.video.framework.content.Package;
 public class AppBrandFragment extends Fragment implements Window.Callback,SwipeRefreshLayout.OnRefreshListener,View.OnApplyWindowInsetsListener {
-	private Packet mPacket;
+	private Package mPacket;
 	private Engine mEngine;
 	private SwipeRefreshLayout refresh;
     private RecyclerView mRecyclerView;
@@ -195,7 +196,7 @@ public class AppBrandFragment extends Fragment implements Window.Callback,SwipeR
 
     
     @Override
-    public Packet getPacket() {
+    public Package getPackage() {
         return mPacket;
     }
     

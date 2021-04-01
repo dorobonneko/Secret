@@ -18,6 +18,8 @@ import org.mozilla.javascript.NativeString;
 import org.mozilla.javascript.ScriptableObject;
 import org.mozilla.javascript.ScriptRuntime;
 import org.mozilla.javascript.IdScriptableObject;
+import com.moe.video.framework.content.Package;
+import java.io.FileNotFoundException;
 
 public class Window
 {
@@ -59,8 +61,8 @@ public class Window
 	public void reload(){
 		callback.reload();
 	}
-	public Packet getPacket(){
-		return callback.getPacket();
+	public Package getPacket(){
+		return callback.getPackage();
 	}
 	public android.content.Context getContext(){
 		return callback.getContext();
@@ -169,18 +171,15 @@ public class Window
 				mMenuItem.setShowAsActionFlags(show?mMenuItem.SHOW_AS_ACTION_ALWAYS:0);
 			}
 			public void setIcon(String icon){
-				InputStream input=call.getPacket().getFile(icon);
-				try
-				{
-					Drawable d=new PictureDrawable(SVG.getFromInputStream(input).renderToPicture());
-					input.close();
-					mMenuItem.setIcon(d);
-					
-				}
-				catch (IOException e)
-				{}
-				catch (SVGParseException e)
-				{}
+				try {
+                    InputStream input=call.getPackage().getFile(icon);
+                    try {
+                        Drawable d=new PictureDrawable(SVG.getFromInputStream(input).renderToPicture());
+                        input.close();
+                        mMenuItem.setIcon(d);
+
+                    } catch (IOException e) {} catch (SVGParseException e) {}
+                } catch (FileNotFoundException e) {}
 
 				}
 			public void setClick(final Function fun){
@@ -206,7 +205,7 @@ public class Window
         public void next()
         public void close()
         public void reload()
-        public Packet getPacket()
+        public Package getPackage()
         public android.content.Context getContext()
         public android.view.Menu getMenu();
         public void post(Runnable run);

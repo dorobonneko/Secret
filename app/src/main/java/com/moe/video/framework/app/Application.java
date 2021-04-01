@@ -1,6 +1,5 @@
 package com.moe.video.framework.app;
 import android.app.Application;
-import com.moe.video.framework.pkg.PacketManager;
 import android.os.Looper;
 import android.util.Printer;
 import android.os.Handler;
@@ -16,7 +15,7 @@ public class Application extends Application
 		// TODO: Implement this method
 		super.onCreate();
 		//初始化包管理器
-		PacketManager.init(this);
+		
 		Looper.getMainLooper().setMessageLogging(new Printer() {
 				//分发和处理消息开始前的log
 				private static final String START = ">>>>> Dispatching";
