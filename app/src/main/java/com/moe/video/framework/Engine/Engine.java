@@ -16,6 +16,7 @@ import org.mozilla.javascript.NativeJavaPackage;
 import java.lang.reflect.InvocationTargetException;
 import org.mozilla.javascript.NativeJavaTopPackage;
 import org.mozilla.javascript.NativeObject;
+import org.mozilla.javascript.NativeJavaObject;
 
 
 public class Engine
@@ -27,10 +28,11 @@ public class Engine
 		//engine=new RhinoScriptEngine();
         context=Context.enter();
         context.setOptimizationLevel(-1);
+        context.setLanguageVersion(Context.VERSION_ES6);
+        final Runtime runtime=new Runtime(fragment,this);
         script=context.initSafeStandardObjects();
         NativeJavaTopPackage.init(context,script,false);
-        final Runtime runtime=new Runtime(fragment);
-		script.put("runtime",script,runtime);
+        script.put("runtime",script,runtime);
         eval(new InputStreamReader(fragment.getContext().getAssets().open("function.js")), "function.js");
 	}
     public NativeObject getModule(){

@@ -20,12 +20,15 @@ import org.mozilla.javascript.ScriptRuntime;
 import org.mozilla.javascript.IdScriptableObject;
 import com.moe.video.framework.content.Package;
 import java.io.FileNotFoundException;
+import com.alibaba.fastjson.JSONObject;
 
 public class Window
 {
 	private Window.Callback callback;
-	public Window(Window.Callback f){
+    private Engine mEngine;
+	public Window(Window.Callback f,Engine mEngine){
 		this.callback=f;
+        this.mEngine=mEngine;
 	}
     public NativeObject getFocus(){
         return callback.getFocus();
@@ -44,7 +47,7 @@ public class Window
     }
     
     public Engine getEngine(){
-        return callback.getEngine();
+        return mEngine;
     }
 	public String getPackageName(){
 		return callback.getPackageName();
@@ -67,19 +70,21 @@ public class Window
 	public android.content.Context getContext(){
 		return callback.getContext();
 	}
-    public void openVideo(String json){
-        callback.openVideo(json);
-    }
-    public void openVideo(NativeObject video){
-        Context context=Context.enter();
-        openVideo(NativeJSON.stringify(context,video,video,null,null).toString());
-        context.exit();
-    }
-    public void open(String name,NativeObject arg){
-        callback.open(name,arg);        
-        
+    public void open(String tag,NativeObject obj){
+        callback.open(tag,obj);
     }
     public void open(String name){
+        JSONObject jo=JSONObject.parseObject(name);
+        if(jo!=null){
+            switch(jo.getString("type")){
+                case "audio":
+                    callback.openAudio(name);
+                    break;
+                case "video":
+                    callback.openVideo(name);
+            }
+            return;
+        }
         callback.open(name,null);        
 
     }
@@ -88,10 +93,12 @@ public class Window
             String type=ScriptRuntime.toString(name.get("type"));
             switch(type){
                 case "audio":
-                    openAudio((NativeObject)name);
+                    callback.openAudio((NativeObject)name);
                     break;
                 case "video":
-                    openVideo((NativeObject)name);
+                    Context context=Context.enter();
+                    callback.openVideo(NativeJSON.stringify(context,name,name,null,null).toString());
+                    context.exit();
                     break;
             }
         }
@@ -99,9 +106,7 @@ public class Window
     public void openImage(String name,NativeObject arg){
         callback.openImage(name,arg);
     }
-    public void openAudio(NativeObject obj){
-        callback.openAudio(obj);
-    }
+    
     public Object getArg(){
         return callback.getArg();
     }
@@ -220,6 +225,7 @@ public class Window
         public void download(String url,String type);
         public NativeObject getFocus();
         public void openAudio(NativeObject obj);
+        public void openAudio(String json);
          }
         
 }

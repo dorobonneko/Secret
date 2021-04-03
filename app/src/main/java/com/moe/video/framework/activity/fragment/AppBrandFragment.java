@@ -1,75 +1,54 @@
 package com.moe.video.framework.activity.fragment;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Fragment;
+import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.PictureDrawable;
+import android.net.Uri;
 import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Toast;
-import com.moe.video.framework.Engine.Engine;
-import com.moe.video.framework.R;
-import com.moe.video.framework.activity.ModelActivity;
-import com.moe.video.framework.pkg.Packet;
-import java.io.InputStreamReader;
-import javax.script.ScriptException;
-import android.view.MenuInflater;
-import android.view.Menu;
-import org.json.JSONObject;
-import org.json.JSONException;
-import android.widget.Toolbar;
-import org.json.JSONArray;
-import android.view.MenuItem;
-import org.mozilla.javascript.NativeObject;
-import org.mozilla.javascript.NativeArray;
-import org.mozilla.javascript.InterpretedFunction;
-import org.mozilla.javascript.ArrowFunction;
-import org.mozilla.javascript.Context;
-import org.mozilla.javascript.ScriptRuntime;
+import android.provider.Settings;
 import android.support.v4.widget.SwipeRefreshLayout;
-import com.moe.video.framework.adapter.PostAdapter;
-import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
-import org.mozilla.javascript.NativeNumber;
-import java.util.List;
-import java.util.ArrayList;
-import org.mozilla.javascript.Function;
-import com.moe.video.framework.util.Space;
-import org.mozilla.javascript.EcmaError;
-import android.graphics.drawable.Drawable;
-import android.view.WindowInsets;
-import java.io.InputStream;
-import android.util.TypedValue;
-import android.util.Xml;
-import org.xmlpull.v1.XmlPullParser;
-import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
-import com.caverock.androidsvg.SVG;
-import android.graphics.drawable.PictureDrawable;
-import android.support.v7.widget.StaggeredGridLayoutManager;
-import android.app.AlertDialog;
-import android.graphics.Color;
-import com.moe.video.framework.Engine.Window;
-import android.support.v7.widget.DefaultItemAnimator;
-import android.support.v7.widget.RecyclerView.ItemAnimator.ItemHolderInfo;
-import android.support.v7.widget.RecyclerView.ViewHolder;
-import android.content.Intent;
-import com.moe.video.framework.VideoActivity;
-import android.provider.Settings;
-import android.net.Uri;
-import com.moe.video.framework.util.StaticData;
-import android.support.v7.widget.SnapHelper;
 import android.support.v7.widget.PagerSnapHelper;
-import com.moe.video.framework.util.ScriptUtil;
-import java.util.function.Consumer;
-import org.mozilla.javascript.NativeJavaArray;
-import org.mozilla.javascript.NativeString;
-import org.mozilla.javascript.NativeJavaObject;
-import java.util.function.Predicate;
-import org.mozilla.javascript.Scriptable;
-import java.io.IOException;
+import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SnapHelper;
+import android.support.v7.widget.StaggeredGridLayoutManager;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.WindowInsets;
+import android.widget.Toast;
+import android.widget.Toolbar;
+import com.alibaba.fastjson.JSONObject;
+import com.caverock.androidsvg.SVG;
 import com.moe.video.framework.AudioActivity;
+import com.moe.video.framework.Engine.Engine;
+import com.moe.video.framework.Engine.Window;
+import com.moe.video.framework.R;
+import com.moe.video.framework.VideoActivity;
+import com.moe.video.framework.activity.ModelActivity;
+import com.moe.video.framework.adapter.PostAdapter;
 import com.moe.video.framework.content.Package;
+import com.moe.video.framework.util.ScriptUtil;
+import com.moe.video.framework.util.Space;
+import com.moe.video.framework.util.StaticData;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Predicate;
+import org.mozilla.javascript.Context;
+import org.mozilla.javascript.Function;
+import org.mozilla.javascript.NativeArray;
+import org.mozilla.javascript.NativeObject;
+import org.mozilla.javascript.ScriptRuntime;
+import org.mozilla.javascript.Scriptable;
 public class AppBrandFragment extends Fragment implements Window.Callback,SwipeRefreshLayout.OnRefreshListener,View.OnApplyWindowInsetsListener {
 	private Package mPacket;
 	private Engine mEngine;
@@ -95,6 +74,13 @@ public class AppBrandFragment extends Fragment implements Window.Callback,SwipeR
     public void openAudio(NativeObject obj) {
         startActivity(new Intent(getContext(),AudioActivity.class).putExtra("key",obj));
     }
+
+    @Override
+    public void openAudio(String json) {
+        JSONObject jo=JSONObject.parseObject(json);
+        startActivity(new Intent(getContext(),AudioActivity.class).putExtra("key",jo));
+    }
+
 
     
     
