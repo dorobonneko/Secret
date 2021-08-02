@@ -64,6 +64,9 @@ public class Database
 			sb.append(");");
 			sql.execSQL(sb.toString());
 		}
+        public void drop(){
+            sql.execSQL("drop table "+table);
+        }
 		public List<Map<String,String>> query(String where)
 		{
 			Cursor cursor=sql.rawQuery(where==null?String.format("select * from %s",table):String.format("select * from %s where %s",new String[]{table,where}),null);
@@ -78,6 +81,9 @@ public class Database
 			cursor.close();
 			return list;
 		}
+        public List<Map<String,String>> query(String key,String value){
+            return query(key+"='"+value+"'");
+        }
 		public void delete(String where){
 			sql.execSQL(String.format("delete from %s where %s",table,where));
 		}

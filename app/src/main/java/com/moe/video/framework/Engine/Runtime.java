@@ -51,6 +51,7 @@ import android.app.ProgressDialog;
 import org.mozilla.javascript.Context;
 import android.content.res.AssetManager;
 import java.io.InputStream;
+import java.security.MessageDigest;
 
 public class Runtime {
 
@@ -58,6 +59,7 @@ public class Runtime {
 	private Handler mHandler;
 	public Window window;
     private static SSLSocketFactory ssl;
+    private static char[] hexdata="0123456789abcdef".toCharArray();
     public Base64 Base64=new Base64();
     private Logcat log=new Logcat();
     private Engine mEngine;
@@ -79,7 +81,19 @@ public class Runtime {
     public String log() {
         return this.log.log();
     }
-
+    public String md5(Object str){
+        try {
+            return hex(MessageDigest.getInstance("md5").digest(str.toString().getBytes()));
+        } catch (NoSuchAlgorithmException e) {}
+        return null;
+    }
+    public String hex(byte[] data){
+        StringBuilder sb=new StringBuilder();
+        for(byte b:data){
+            sb.append(hexdata[(b>>>4)&0xf]).append(hexdata[b&0xf]);
+        }
+        return sb.toString();
+    }
     public void options(NativeObject obj, final Function callback) {
         final String title=ScriptRuntime.toString(obj.get("title"));
         final String defaultValue=ScriptRuntime.toString(obj.get("defaultValue"));

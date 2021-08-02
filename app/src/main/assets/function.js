@@ -57,8 +57,10 @@ function request(opt) {
     }
     if (opt.data)
     {
+        var bytes=getBytes(opt.data);
+        conn.setRequestProperty("content-length",bytes.length+"");
         var out=conn.getOutputStream();
-        out.write(getBytes(opt.data));
+        out.write(bytes);
         out.flush();
     }
     var input=conn.getInputStream();

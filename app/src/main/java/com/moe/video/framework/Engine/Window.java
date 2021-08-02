@@ -74,6 +74,7 @@ public class Window
         callback.open(tag,obj);
     }
     public void open(String name){
+        try{
         JSONObject jo=JSONObject.parseObject(name);
         if(jo!=null){
             switch(jo.getString("type")){
@@ -84,7 +85,7 @@ public class Window
                     callback.openVideo(name);
             }
             return;
-        }
+        }}catch(Exception e){}
         callback.open(name,null);        
 
     }

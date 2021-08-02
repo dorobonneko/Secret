@@ -20,6 +20,9 @@
 			android:id="@+id/icon"/>
 
 		<TextView
+            android:shadowColor="#ffffffff"
+            android:shadowRadius="3"
+            android:shadowDy="2"
 			android:singleLine="true"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"

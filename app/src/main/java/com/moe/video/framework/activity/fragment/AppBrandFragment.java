@@ -282,12 +282,14 @@ public class AppBrandFragment extends Fragment implements Window.Callback,SwipeR
             exports=(NativeObject) mEngine.eval(new InputStreamReader(mPacket.getFile(mBundle.getString("exe"))),mBundle.getString("exe"));
             
         } catch (IOException e) {
-			new AlertDialog.Builder(getContext()).setMessage(e.toString()).show();
+            mEngine.getRuntime().log(e.getMessage());
+            for(StackTraceElement ee:e.getStackTrace())
+            mEngine.getRuntime().log(ee.toString());
+			//new AlertDialog.Builder(getContext()).setMessage(e.toString()).show();
         }
 	}
 	public void refresh() {
-		refresh.setRefreshing(true);
-		onRefresh();
+		pa.notifyDataSetChanged();
 	}
 	public void next() {
 		if (canLoadMore) {
@@ -321,6 +323,7 @@ public class AppBrandFragment extends Fragment implements Window.Callback,SwipeR
 
     @Override
 	public void reload() {
+        mEngine.getRuntime().log("加载布局");
 		try {
             try {
                 mRecyclerView.setBackgroundColor(Color.parseColor(ScriptRuntime.toString(mEngine.getOrDefault("bgColor","#00000000"))));
@@ -328,7 +331,10 @@ public class AppBrandFragment extends Fragment implements Window.Callback,SwipeR
             layout = ScriptRuntime.toString(mEngine.getOrDefault("layout","grid"));
             initLayout(layout);
             if(!layout.equals("gallery"))
-                refresh();
+            {
+                refresh.setRefreshing(true);
+                onRefresh();
+            }
             Function toolbar=(Function) exports.get("toolbar");
             if(toolbar==null){
                 return;}
@@ -378,7 +384,10 @@ public class AppBrandFragment extends Fragment implements Window.Callback,SwipeR
 				}
 		}
         catch (Exception e) {
-			mEngine.getRuntime().toast(e.getMessage());
+			mEngine.getRuntime().log(e.getMessage());
+            for(StackTraceElement ee:e.getStackTrace())
+                mEngine.getRuntime().log(ee.toString());
+            
 		}
         	}
 	@Override
@@ -416,6 +425,7 @@ public class AppBrandFragment extends Fragment implements Window.Callback,SwipeR
 	}
 	public void loadMore() {
 		refresh.setRefreshing(true);
+        mEngine.getRuntime().log("请求并加载数据：page="+page);
 		new Thread(){
 			public void run() {
 				try {
@@ -436,31 +446,33 @@ public class AppBrandFragment extends Fragment implements Window.Callback,SwipeR
 									AppBrandFragment.this.data.clear();
 									pa.notifyItemRangeRemoved(0,size);
                                     //重建布局
-
+                                    }
 									if (items != null) {
-                                        AppBrandFragment.this.data.addAll(items);
-                                        pa.notifyItemRangeInserted(0, items.size());
-									}
-                                    //pa.notifyDataSetChanged();
-								} else {
-									int count=pa.getItemCount();
-									if (items != null) {
+                                        mEngine.getRuntime().log("返回的数据量：size="+items.size());
+                                        int count=pa.getItemCount();
                                         AppBrandFragment.this.data.addAll(items);
                                         pa.notifyItemRangeInserted(count, items.size());
-									}
-
-								}
+									}else{
+                                        mEngine.getRuntime().log("无返回数据");
+                                    }
+                                    //pa.notifyDataSetChanged();
+								
+								
 								page = ScriptRuntime.toInt32(data.get("nextPage"));
 							}
 						});
 				} catch (final Exception e) {
+                    mEngine.getRuntime().log(e.getMessage());
+                    for(StackTraceElement ee:e.getStackTrace())
+                        mEngine.getRuntime().log(ee.toString());
                     if (getView() != null)
                         getView().post(new Runnable(){
 
                                 @Override
                                 public void run() {
                                     refresh.setRefreshing(false);
-                                    new AlertDialog.Builder(getActivity()).setMessage(e.getMessage()).show();
+                                    mEngine.getRuntime().toast("Failed");
+                                    //new AlertDialog.Builder(getActivity()).setMessage(e.getMessage()).show();
                                 }
                             });
 				}

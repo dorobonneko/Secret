@@ -69,8 +69,11 @@ public abstract class ModelActivity extends Activity implements SharedPreference
         getFragmentManager().beginTransaction().add(android.R.id.content,abf).addToBackStack(null).commit();
 		ViewGroup vg=(ViewGroup) getWindow().getDecorView();
 		ImageView debug=null;
-		vg.addView(debug=new ImageView(this),new FrameLayout.LayoutParams(-2,-2,Gravity.BOTTOM|Gravity.END));
-		debug.setImageResource(R.drawable.close);
+            FrameLayout.LayoutParams params=new FrameLayout.LayoutParams(-2,-2,Gravity.BOTTOM|Gravity.END);
+            params.bottomMargin=20;
+            params.rightMargin=20;
+		vg.addView(debug=new ImageView(this),params);
+		debug.setImageResource(R.drawable.bug);
 			debug.setOnClickListener(new View.OnClickListener(){
 
 					@Override
